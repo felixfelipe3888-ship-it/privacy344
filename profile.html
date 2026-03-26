@@ -304,15 +304,23 @@
             });
         }
 
+        async function fetchConfig() {
+            try {
+                const response = await fetch('/api/load-config?t=' + Date.now());
+                const data = await response.json();
+                loadProfile(data);
+            } catch (err) {
+                console.error('Erro ao buscar config:', err);
+            }
+        }
+
         window.addEventListener('load', () => {
             initButtons();
-            fetch('/api/load-config').then(res => res.json()).then(data => {
-                if (Object.keys(data).length > 0) loadProfile(data);
-                else {
-                    const saved = localStorage.getItem('profileData');
-                    if (saved) loadProfile(JSON.parse(saved));
-                }
-            });
+            fetchConfig();
+        });
+
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'UPDATE_PROFILE') loadProfile(event.data.data);
         });
     </script>
 </body>
