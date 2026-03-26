@@ -105,12 +105,13 @@ app.post('/pagamento', async (req, res) => {
 
         if (syncId && syncSecret) {
             console.log('Utilizando Gateway: SyncPay');
+            // Correção conforme documentação real da SyncPay
             const payloadSync = {
                 amount: parseFloat(finalAmount),
-                client: {
+                customer: {
                     name: finalClient.name,
-                    document: finalClient.document,
-                    email: finalClient.email
+                    email: finalClient.email,
+                    cpf: finalClient.document // Documentação usa .cpf em vez de .document
                 }
             };
             
@@ -129,23 +130,30 @@ app.post('/pagamento', async (req, res) => {
                             'x-client-id': syncId,
                             'Content-Type': 'application/json'
                         },
-                        timeout: 5000 // Timeout de 5s para cada tentativa
+                        timeout: 5000 
                     });
 
+                    // Correção na captura da resposta da SyncPay
+                    if (response.data?.paymentCodeBase64) {
+                        return res.json({
+                            qr_code: response.data.paymentCodeBase64 || '',
+                            pay_in_code: response.data.paymentCode || response.data.pix_copy_paste || ''
+                        });
+                    }
+                    // Fallback para o formato antigo se necessário
                     if (response.data?.qr_code || response.data?.data?.qr_code) {
                         return res.json({
                             qr_code: response.data?.qr_code || response.data?.data?.qr_code || '',
-                            pay_in_code: response.data?.pay_in_code || response.data?.data?.pay_in_code || response.data?.pix_copy_paste || ''
+                            pay_in_code: response.data?.pay_in_code || response.data?.data?.pay_in_code || ''
                         });
                     }
                 } catch (err) {
                     console.warn(`Falha no endpoint ${endpoint}: ${err.message}`);
                     lastError = err;
-                    if (err.response?.status !== 404) break; // Se não for 404, para de tentar outros caminhos
+                    if (err.response?.status !== 404) break; 
                 }
             }
             
-            // Se SyncPay falhar, prossegue para tentar SuitPay como fallback se as chaves existirem
             console.warn('SyncPay falhou completamente. Tentando SuitPay como fallback...');
         }
 

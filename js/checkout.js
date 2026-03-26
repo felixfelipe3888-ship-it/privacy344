@@ -122,7 +122,12 @@ async function handleSuitPaySubmit(event) {
             document.getElementById('suitpayForm').style.display = 'none';
             document.getElementById('suitpayPixArea').style.display = 'block';
             
-            document.getElementById('spQrCode').src = data.qr_code;
+            // Correção para forçar prefixo Base64 se não existir
+            const qrRaw = data.qr_code || '';
+            document.getElementById('spQrCode').src = qrRaw.startsWith('data:')
+                ? qrRaw
+                : 'data:image/png;base64,' + qrRaw;
+
             document.getElementById('spCopyPaste').value = data.pay_in_code || '';
         } else {
             const errorMsg = data.message || (data.details ? JSON.stringify(data.details) : 'Erro no processamento PIX');
