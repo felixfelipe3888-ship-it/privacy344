@@ -29,7 +29,7 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/premium.css">
-    <link rel="stylesheet" href="css/suitpay_checkout.css">
+    <link rel="stylesheet" href="css/checkout.css">
 </head>
 <body>
 
@@ -413,6 +413,7 @@
             }
 
             // Media setup function
+            // Media setup function
             const setMedia = (id, url) => {
                 const img = document.getElementById('locked_bg_' + id);
                 const vid = document.getElementById('locked_vid_' + id);
@@ -446,6 +447,29 @@
             setMedia('m3', data.m3);
             setMedia('m4', data.m4);
             setMedia('m5', data.m5);
+
+            const setupPlan = (id, link) => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                
+                btn.onclick = () => {
+                    if (link && link.startsWith('http')) {
+                        window.location.href = link;
+                        return;
+                    }
+                    const priceSpan = btn.querySelector('span:nth-child(2) span');
+                    const planNameSpan = btn.querySelector('span:nth-child(1)');
+                    if(!priceSpan || !planNameSpan) return;
+                    const planName = planNameSpan.innerText;
+                    const price = priceSpan.innerText;
+                    if (typeof openSuitPayModal === 'function') openSuitPayModal(planName, price);
+                };
+                btn.style.cursor = 'pointer';
+            };
+            
+            setupPlan('btn_plan1', data.l1);
+            setupPlan('btn_plan3', data.l3);
+            setupPlan('btn_plan6', data.l6);
         }
 
         const saved = localStorage.getItem('profileData');
@@ -501,7 +525,7 @@
         </div>
     </div>
 
-    <script src="js/suitpay_checkout.js"></script>
+    <script src="js/checkout.js"></script>
     <script>
         function switchTab(tabName) {
             document.getElementById('tab_btn_posts').classList.remove('active');

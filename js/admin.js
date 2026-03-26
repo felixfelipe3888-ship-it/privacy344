@@ -365,8 +365,8 @@ async function exportZip() {
         
         const assets = [
             'css/premium.css', 
-            'css/suitpay_checkout.css', 
-            'js/suitpay_checkout.js', 
+            'css/checkout.css', 
+            'js/checkout.js', 
             'images/logo-black.svg', 
             'checkout.php',
             'api/load-config.php',

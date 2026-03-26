@@ -16,7 +16,7 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/premium.css">
-    <link rel="stylesheet" href="css/suitpay_checkout.css">
+    <link rel="stylesheet" href="css/checkout.css">
 </head>
 <body>
 
@@ -472,7 +472,15 @@
 
             const setupPlan = (id, link) => {
                 const btn = document.getElementById(id);
+                if (!btn) return;
+                
                 btn.onclick = () => {
+                    // Se houver um link externo configurado, usa ele em vez do modal
+                    if (link && link.startsWith('http')) {
+                        window.location.href = link;
+                        return;
+                    }
+                    
                     const priceSpan = btn.querySelector('span:nth-child(2) span');
                     const planNameSpan = btn.querySelector('span:nth-child(1)');
                     if(!priceSpan || !planNameSpan) return;
@@ -595,7 +603,7 @@
         </div>
     </div>
 
-    <script src="js/suitpay_checkout.js"></script>
+    <script src="js/checkout.js"></script>
     <script>
         function switchTab(tabName) {
             document.getElementById('tab_btn_posts').classList.remove('active');

@@ -79,50 +79,95 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 
 // --- Fim das Rotas de Admin ---
 
-// Rota de pagamento
+// Rota de pagamento (Unificada para SuitPay e SyncPay)
 app.post('/pagamento', async (req, res) => {
     try {
-        const { value, method, customerDetails } = req.body;
-        // Rename keys to avoid Railway's automated secret-detection build errors (secret Client: not found)
-        const ci = process.env.SUIT_CI || process.env.API_KEY;
-        const cs = process.env.SUIT_CS || process.env.API_KEY;
+        const { amount, value, client, customerDetails } = req.body;
+        const finalAmount = amount || value;
+        const finalClient = client || customerDetails;
 
-        if (!ci || !cs) {
-            console.error('Credenciais ausentes no ambiente.');
-            return res.status(500).json({ error: 'Faltam credenciais SUIT_CI e SUIT_CS no Railway.' });
+        if (!finalAmount || !finalClient) {
+            return res.status(400).json({ error: 'Dados de pagamento incompletos (valor ou cliente ausentes).' });
         }
 
-        const payloadGateway = {
-            requestNumber: 'PRV_' + Date.now(),
-            dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-            amount: value,
-            client: {
-                name: customerDetails?.name || 'Cliente',
-                document: customerDetails?.document || '12345678909',
-                email: customerDetails?.email || 'email@email.com'
-            }
-        };
+        // Tenta pegar configurações do db.json para SyncPay primeiro (se configurado no admin)
+        let dbConfig = {};
+        if (fs.existsSync(DB_FILE)) {
+            dbConfig = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+        }
 
-        const response = await axios.post('https://ws.suitpay.app/api/v1/gateway/request-qrcode', payloadGateway, {
-            headers: {
-                'ci': ci,
-                'cs': cs,
-                'Authorization': `Bearer ${cs}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        // Retorna a resposta da API formatada como esperado pelo frontend
-        // O frontend aguarda: qr_code e pay_in_code
-        // Note: modifique a atribuição abaixo para refletir a verdadeira estrutura do seu gateway
-        res.json({
-            qr_code: response.data?.qr_code || response.data?.data?.qr_code || '',
-            pay_in_code: response.data?.pay_in_code || response.data?.data?.pay_in_code || response.data?.pix_copy_paste || ''
-        });
-    } catch (error) {
-        console.error('Erro na requisição de pagamento:', error.message);
+        // --- Detecção de Gateway e Credenciais ---
         
-        // Retorna um erro amigável caso a API de pagamento falhe
+        // 1. Prioridade para SyncPay (se houver credenciais específicas)
+        const syncId = process.env.SYNCPAY_CLIENT_ID || dbConfig.syncpay_id;
+        const syncSecret = process.env.SYNCPAY_CLIENT_SECRET || dbConfig.syncpay_secret;
+        const syncUrl = process.env.SYNCPAY_BASE_URL || dbConfig.syncpay_url || 'https://api.syncpayments.com.br';
+
+        if (syncId && syncSecret) {
+            console.log('Utilizando Gateway: SyncPay');
+            const payloadSync = {
+                amount: parseFloat(finalAmount),
+                client: {
+                    name: finalClient.name,
+                    document: finalClient.document,
+                    email: finalClient.email
+                }
+            };
+            
+            const response = await axios.post(`${syncUrl}/v1/pix`, payloadSync, {
+                headers: {
+                    'x-api-key': syncSecret,
+                    'x-client-id': syncId,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            return res.json({
+                qr_code: response.data?.qr_code || response.data?.data?.qr_code || '',
+                pay_in_code: response.data?.pay_in_code || response.data?.data?.pay_in_code || response.data?.pix_copy_paste || ''
+            });
+        }
+
+        // 2. Fallback para SuitPay
+        const suitId = process.env.SUIT_CI || process.env.API_KEY;
+        const suitSecret = process.env.SUIT_CS || process.env.API_KEY;
+
+        if (suitId && suitSecret) {
+            console.log('Utilizando Gateway: SuitPay');
+            const payloadSuit = {
+                requestNumber: 'PRV_' + Date.now(),
+                dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                amount: parseFloat(finalAmount),
+                client: {
+                    name: finalClient.name,
+                    document: finalClient.document,
+                    email: finalClient.email
+                }
+            };
+
+            const response = await axios.post('https://ws.suitpay.app/api/v1/gateway/request-qrcode', payloadSuit, {
+                headers: {
+                    'ci': suitId,
+                    'cs': suitSecret,
+                    'Authorization': `Bearer ${suitSecret}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            return res.json({
+                qr_code: response.data?.qr_code || response.data?.data?.qr_code || '',
+                pay_in_code: response.data?.pay_in_code || response.data?.data?.pay_in_code || response.data?.pix_copy_paste || ''
+            });
+        }
+
+        // Caso nenhum gateway esteja configurado
+        console.error('Nenhuma credencial de API encontrada (SyncPay ou SuitPay).');
+        return res.status(500).json({ 
+            error: 'Erro de configuração: Credenciais de API não encontradas no Railway ou no Painel Admin.' 
+        });
+
+    } catch (error) {
+        console.error('Erro no processamento do pagamento:', error.message);
         res.status(500).json({ 
             error: 'Falha ao processar o pagamento na API externa.',
             details: error.response?.data || error.message
