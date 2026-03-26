@@ -83,16 +83,15 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 app.post('/pagamento', async (req, res) => {
     try {
         const { value, method, customerDetails } = req.body;
-        const apiKey = process.env.API_KEY;
+        // Permite usar CLIENT_ID e CLIENT_SECRET (Suitpay) ou API_KEY (SyncPay)
+        const ci = process.env.CLIENT_ID || process.env.API_KEY;
+        const cs = process.env.CLIENT_SECRET || process.env.API_KEY;
 
-        if (!apiKey) {
-            console.error('API_KEY não configurada no ambiente.');
-            // Dependendo do provedor, ele aceita erro 500, no frontend já tratará
-            return res.status(500).json({ error: 'Configuração de servidor inválida: API Key ausente' });
+        if (!ci || !cs) {
+            console.error('Credenciais ausentes no ambiente.');
+            return res.status(500).json({ error: 'Faltam credenciais CLIENT_ID e CLIENT_SECRET no Railway.' });
         }
 
-        // Monta o payload no formato comum dos gateways (ex: SuitPay/SyncPay)
-        // customerDetails já traz name, document e email do client.
         const payloadGateway = {
             requestNumber: 'PRV_' + Date.now(),
             dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
@@ -106,9 +105,9 @@ app.post('/pagamento', async (req, res) => {
 
         const response = await axios.post('https://ws.suitpay.app/api/v1/gateway/request-qrcode', payloadGateway, {
             headers: {
-                'ci': apiKey,
-                'cs': apiKey,
-                'Authorization': `Bearer ${apiKey}`,
+                'ci': ci,
+                'cs': cs,
+                'Authorization': `Bearer ${cs}`,
                 'Content-Type': 'application/json'
             }
         });
