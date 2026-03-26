@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Profile Generator</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #EF8641;
+            --primary-gradient: linear-gradient(90deg, #EF8641 0%, #F6A35F 100%);
+            --dark-bg: #121212;
+            --card-bg: #1E1E1E;
+            --input-bg: #2C2C2C;
+            --text-main: #FFFFFF;
+            --text-dim: #A0A0A0;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar / Form Area */
+        .sidebar {
+            width: 450px;
+            background-color: var(--card-bg);
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .sidebar h2 {
+            font-weight: 800;
+            margin-bottom: 24px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.5rem;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            background: #252525;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .form-section h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--primary-orange);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .media-box label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            background-color: var(--input-bg);
+            border: 1px solid #444;
+            color: white;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            background-color: var(--input-bg);
+            border-color: var(--primary-orange);
+            color: white;
+            box-shadow: 0 0 0 2px rgba(239, 134, 65, 0.2);
+        }
+
+        /* Preview Area */
+        .preview-container {
+            flex: 1;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5%; /* More adaptive padding */
+            position: relative;
+            overflow: auto; /* Handle overflow if scale is not enough */
+        }
+
+        .preview-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .mock-phone {
+            width: 375px; 
+            min-width: 375px;
+            height: 750px;
+            min-height: 750px;
+            border: 12px solid #333;
+            border-radius: 40px;
+            background: #F9F7F5;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            position: relative;
+            transform-origin: center center;
+            /* Auto-scaling base logic */
+            transition: transform 0.2s;
+        }
+
+        /* Scale down for smaller screens */
+        @media (max-width: 1400px) {
+            .mock-phone { transform: scale(0.9); }
+        }
+        @media (max-width: 1200px) {
+            .mock-phone { transform: scale(0.8); }
+        }
+        @media (max-height: 850px) {
+            .mock-phone { transform: scale(0.75); }
+        }
+
+        .mock-phone iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Actions */
+        .actions-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 450px;
+            background: var(--card-bg);
+            padding: 20px 24px;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-generate {
+            flex: 1;
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+        }
+
+        .btn-generate:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-generate:active {
+            transform: translateY(0);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--card-bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Painel de Controle</h2>
+
+        <div class="form-section">
+            <h3><i class="fas fa-user"></i> Identidade</h3>
+            <div class="form-group">
+                <label>Nome do Perfil</label>
+                <input type="text" id="input_name" class="form-control" value="Sayure">
+            </div>
+            <div class="form-group">
+                <label>Username (com @)</label>
+                <input type="text" id="input_username" class="form-control" value="@Sayukji">
+            </div>
+            <div class="form-group">
+                <label>Bio</label>
+                <textarea id="input_bio" class="form-control" rows="3">19// paraense //Explícito de qualidade 💋</textarea>
+            </div>
+            <div class="form-group">
+                <label><i class="fab fa-instagram"></i> Link do Instagram (URL)</label>
+                <input type="text" id="input_instagram" class="form-control" placeholder="https://instagram.com/seuusuario">
+            </div>
+            <div class="form-group mt-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="input_lang_btn" checked>
+                    <label class="form-check-label" for="input_lang_btn" style="color: var(--text-dim); cursor: pointer;">Mostrar Seletor de Idioma</label>
+                </div>
+            </div>
+            <div class="form-group mt-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="input_cookies" checked>
+                    <label class="form-check-label" for="input_cookies" style="color: var(--text-dim); cursor: pointer;">Mostrar Aviso de Cookies</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-chart-bar"></i> Estatísticas</h3>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="form-group">
+                        <label>Fotos</label>
+                        <input type="number" id="input_photos" class="form-control" value="15">
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <label>Vídeos</label>
+                        <input type="number" id="input_videos" class="form-control" value="24">
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <label>Bloqueados</label>
+                        <input type="number" id="input_locks" class="form-control" value="30">
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <label>Curtidas</label>
+                        <input type="number" id="input_hearts" class="form-control" value="619">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-images"></i> Mídias (Foto & Vídeo)</h3>
+            
+            <div class="media-box">
+                <label>Foto de Perfil</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_avatar" class="form-control" placeholder="https://...">
+                    <label for="upload_avatar_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_avatar_file" hidden accept="image/*">
+                </div>
+            </div>
+
+            <div class="media-box mt-3">
+                <label>Foto de Fundo (Capa)</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_cover" class="form-control" placeholder="https://...">
+                    <label for="upload_cover_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_cover_file" hidden accept="image/*">
+                </div>
+            </div>
+
+            <div class="media-box mt-3">
+                <label>Vídeo do Feed (MP4)</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_video" class="form-control" placeholder="https://...">
+                    <label for="upload_video_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_video_file" hidden accept="image/*,video/mp4">
+                </div>
+                <small class="text-dim mt-1 d-block" style="font-size: 0.7rem;">Dica: Prefira vídeos curtos ou fotos de alta qualidade.</small>
+            </div>
+
+            <h4 style="color: var(--primary-orange); font-size: 0.9rem; margin-top: 25px; margin-bottom: 10px; font-weight: 600;">Posts da Aba Mídias</h4>
+            
+            <!-- Mídia 1 -->
+            <div class="media-box mt-3">
+                <label>Mídia 1 (Cadeado 1)</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_media1" class="form-control" placeholder="Link (Foto/Vídeo)">
+                    <label for="upload_media1_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_media1_file" hidden accept="image/*,video/mp4">
+                </div>
+            </div>
+            <!-- Mídia 2 -->
+            <div class="media-box mt-3">
+                <label>Mídia 2 (Cadeado 2)</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_media2" class="form-control" placeholder="Link (Foto/Vídeo)">
+                    <label for="upload_media2_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_media2_file" hidden accept="image/*,video/mp4">
+                </div>
+            </div>
+            <!-- Mídia 3 -->
+            <div class="media-box mt-3">
+                <label>Mídia 3 (Cadeado 3)</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_media3" class="form-control" placeholder="Link (Foto/Vídeo)">
+                    <label for="upload_media3_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_media3_file" hidden accept="image/*,video/mp4">
+                </div>
+            </div>
+            <!-- Mídia 4 -->
+            <div class="media-box mt-3">
+                <label>Mídia 4 (Cadeado 4)</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_media4" class="form-control" placeholder="Link (Foto/Vídeo)">
+                    <label for="upload_media4_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_media4_file" hidden accept="image/*,video/mp4">
+                </div>
+            </div>
+            <!-- Mídia 5 -->
+            <div class="media-box mt-3">
+                <label>Mídia 5 (Cadeado 5)</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_media5" class="form-control" placeholder="Link (Foto/Vídeo)">
+                    <label for="upload_media5_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_media5_file" hidden accept="image/*,video/mp4">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-shopping-cart"></i> Checkout Personalizado</h3>
+            <div class="form-group">
+                <label>Banner Superior do Checkout</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_ck_banner" class="form-control" placeholder="Link da imagem">
+                    <label for="upload_ck_banner_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_ck_banner_file" hidden accept="image/*">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Foto de Perfil do Checkout</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_ck_avatar" class="form-control" placeholder="Link da imagem">
+                    <label for="upload_ck_avatar_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_ck_avatar_file" hidden accept="image/*">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Mini Texto Embaixo do Preço</label>
+                <input type="text" id="input_ck_minitext" class="form-control" value="Cobrado de forma segura" placeholder="Ex: Acesso imediato">
+            </div>
+            <div class="form-group">
+                <label>Ancoragem (Preço riscado do lado do valor real)</label>
+                <input type="text" id="input_ck_anchor" class="form-control" value="R$ 149,99" placeholder="Ex: R$ 99,90">
+            </div>
+            <div class="form-group">
+                <label>Modo Escassez (Tempo finalizando)</label>
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" id="input_ck_timer_on" checked>
+                    <label class="form-check-label" for="input_ck_timer_on" style="color: var(--text-dim); cursor: pointer;">Ligar Timer</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tempo Inicial (Minutos)</label>
+                <input type="number" id="input_ck_time" class="form-control" value="15">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-key"></i> Configurações SyncPay</h3>
+            <p style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 15px;">Estes dados são usados para gerar o PIX no checkout. Se preenchidos aqui, eles serão usados na exportação do ZIP.</p>
+            <div class="form-group">
+                <label>SyncPay Client ID</label>
+                <input type="text" id="input_syncpay_id" class="form-control" placeholder="ID da sua conta SyncPay">
+            </div>
+            <div class="form-group">
+                <label>SyncPay Client Secret</label>
+                <input type="password" id="input_syncpay_secret" class="form-control" placeholder="Secret da sua conta SyncPay">
+            </div>
+            <div class="form-group">
+                <label>SyncPay API URL</label>
+                <input type="text" id="input_syncpay_url" class="form-control" value="https://api.syncpayments.com.br">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-credit-card"></i> Planos (R$)</h3>
+            <div class="form-group">
+                <label>Preço 1 Mês</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_price1" class="form-control" value="19,99" style="width: 80px;">
+                    <input type="text" id="input_link1" class="form-control" placeholder="Link de pagamento (URL)">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Preço 3 Meses</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_price3" class="form-control" value="59,97" style="width: 80px;">
+                    <input type="text" id="input_link3" class="form-control" placeholder="Link de pagamento (URL)">
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 80px;">
+                <label>Preço 6 Meses</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_price6" class="form-control" value="119,94" style="width: 80px;">
+                    <input type="text" id="input_link6" class="form-control" placeholder="Link de pagamento (URL)">
+                </div>
+            </div>
+        </div>
+
+        <div class="actions-bar" style="gap: 8px; padding: 15px;">
+            <button class="btn-generate" style="background: #444;" onclick="saveData(event)">
+                <i class="fas fa-save"></i> Salvar
+            </button>
+            <button class="btn-generate" style="background: #333;" onclick="window.open('profile.html', '_blank')">
+                <i class="fas fa-eye"></i> Ver Site
+            </button>
+            <button class="btn-generate" onclick="generateLink()">
+                <i class="fas fa-link"></i> Link
+            </button>
+            <button class="btn-generate" style="background: linear-gradient(90deg, #28a745 0%, #34ce57 100%);" onclick="exportZip()">
+                <i class="fas fa-file-archive"></i> ZIP
+            </button>
+            <p style="font-size: 0.65rem; color: #777; margin-top: 5px; text-align: center; width: 100%;">
+                Dica: O ZIP incluirá um checkout automático via PHP para sua hospedagem.
+            </p>
+        </div>
+    </div>
+
+    <div class="preview-container">
+        <div class="preview-header" style="width: 100%; display: flex; justify-content: space-between; padding: 0 40px;">
+            <div><i class="fas fa-mobile-alt"></i> Visualização em Tempo Real</div>
+            <button onclick="updatePreview(true)" title="Forçar Atualização" style="background: none; border: none; color: var(--primary-orange); cursor: pointer; font-size: 1rem;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+        <div class="mock-phone">
+            <iframe id="preview_iframe" src="profile.html"></iframe>
+        </div>
+    </div>
+
+    <!-- External Libraries for Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

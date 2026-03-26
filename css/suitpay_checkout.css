@@ -1,0 +1,243 @@
+.suitpay-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+}
+
+.suitpay-modal-container {
+    background: #fff;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    font-family: 'Inter', sans-serif;
+    animation: spSlideUp 0.3s ease-out;
+}
+
+@keyframes spSlideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.suitpay-modal-header {
+    height: 180px;
+    position: relative;
+    background: #FF9956; /* Laranja Default */
+}
+
+.suitpay-banner {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 25%;
+    display: block;
+}
+
+.suitpay-header-info {
+    position: absolute;
+    bottom: -35px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.suitpay-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    object-fit: cover;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.suitpay-model-name {
+    color: #1A1A1A;
+    font-weight: 800;
+    font-size: 1.25rem;
+    margin-bottom: -30px;
+    z-index: 10;
+}
+
+.suitpay-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #fff;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+
+.suitpay-modal-body {
+    padding: 45px 20px 20px;
+}
+
+.suitpay-modal-body h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.suitpay-price {
+    font-size: 1.8rem;
+    color: #EF8641;
+    font-weight: 800;
+    margin: 5px 0 15px;
+}
+
+#suitpayTimerArea {
+    background: linear-gradient(90deg, #FFF3ED 0%, #FFF9F6 100%) !important;
+    color: #EF8641 !important;
+    border: 1px solid #FFD9C6 !important;
+    padding: 10px !important;
+    font-weight: 700 !important;
+}
+
+.suitpay-footer-logo {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    opacity: 0.6;
+}
+
+.suitpay-footer-logo img {
+    height: 14px;
+    width: auto;
+}
+
+.suitpay-input-group {
+    margin-bottom: 15px;
+}
+
+.suitpay-input-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.suitpay-input-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.suitpay-input-group input:focus {
+    border-color: #FF9956;
+}
+
+.suitpay-submit-btn, .suitpay-copy-btn {
+    width: 100%;
+    height: 48px;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+    color: #1A1A1A;
+    border: none;
+    border-radius: var(--border-radius-button);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.suitpay-submit-btn:hover, .suitpay-copy-btn:hover {
+    background: linear-gradient(90deg, #FFC09A, #FFA08A);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(245, 129, 112, 0.4);
+}
+
+.suitpay-submit-btn:active, .suitpay-copy-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.suitpay-submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+
+#suitpayPixArea h4 {
+    margin: 0 0 10px;
+    color: #333;
+}
+
+#suitpayPixArea p {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+#suitpayPixArea input {
+    width: 100%;
+    padding: 8px;
+    font-size: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
+    margin-top: 15px;
+    color: #555;
+    text-align: center;
+}
+.suitpay-secure-info {
+    font-size: 0.75rem;
+    color: #888;
+    text-align: center;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.suitpay-secure-info i {
+    color: #28a745;
+    font-size: 0.8rem;
+}
+
+#suitpayMiniText {
+    color: #444 !important; /* Preto não muito forte */
+    font-weight: 500;
+}
+
+@media (max-width: 450px) {
+    .suitpay-modal-overlay {
+        padding: 10px;
+    }
+    .suitpay-modal-container {
+        border-radius: 16px;
+        max-width: 100%;
+    }
+    .suitpay-modal-header {
+        height: 140px;
+    }
+    .suitpay-modal-body {
+        padding: 40px 15px 15px;
+    }
+    .suitpay-submit-btn, .suitpay-copy-btn {
+        height: 52px;
+        font-size: 1.1rem;
+    }
+    .suitpay-input-group input {
+        padding: 12px;
+        font-size: 1rem;
+    }
+}
