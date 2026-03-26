@@ -479,44 +479,61 @@
             if (event.data.type === 'UPDATE_PROFILE') loadProfile(event.data.data);
         });
     </script>
-    <!-- SUITPAY CHECKOUT MODAL -->
+    <!-- SUITPAY CHECKOUT MODAL PREMIUM -->
     <div id="suitpayModal" class="suitpay-modal-overlay" style="display: none;">
         <div class="suitpay-modal-container">
             <div class="suitpay-modal-header">
                 <span class="suitpay-close" onclick="closeSuitPayModal()">&times;</span>
                 <img id="suitpayBanner" src="images/cover_placeholder.jpg" class="suitpay-banner" alt="Banner">
-                <img id="suitpayAvatar" src="images/avatar_placeholder.jpg" class="suitpay-avatar" alt="Avatar">
+                <div class="suitpay-header-info">
+                    <img id="suitpayAvatar" src="images/avatar_placeholder.jpg" class="suitpay-avatar" alt="Avatar">
+                    <div class="suitpay-header-text">
+                        <span id="suitpayModelName" class="suitpay-model-name">Leticia</span>
+                        <span class="suitpay-verified"><i class="fas fa-check-circle"></i> Verificada</span>
+                    </div>
+                </div>
             </div>
+            
             <div class="suitpay-modal-body">
-                <h3 id="suitpayPlanName">Assinatura</h3>
-                <div style="font-size: 0.9rem; color: #999; text-decoration: line-through; margin-top: 5px; display: none;" id="suitpayAnchor"></div>
-                <p id="suitpayPlanPrice" class="suitpay-price" style="margin-top: 0;">R$ 0,00</p>
-                <p style="font-size: 0.8rem; color: #28a745; margin-top: -15px; margin-bottom: 15px; display: none;" id="suitpayMiniText"></p>
-                <div id="suitpayTimerArea" style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 6px; text-align: center; font-weight: bold; font-size: 0.85rem; margin-bottom: 20px; display: none;">
-                    <i class="fas fa-clock"></i> Oferta expira em: <span id="suitpayTimer">15:00</span>
+                <h3 id="suitpayPlanName">Assinatura Premium</h3>
+                
+                <div class="suitpay-price-area">
+                    <div id="suitpayAnchor" class="suitpay-anchor" style="display: none;">R$ 99,99</div>
+                    <p id="suitpayPlanPrice" class="suitpay-price">R$ 0,00</p>
+                    <p id="suitpayMiniText" class="suitpay-mini-text" style="display: none;">Acesso imediato ao conteúdo</p>
+                </div>
+
+                <div id="suitpayTimerArea" class="suitpay-timer-box" style="display: none;">
+                    <i class="fas fa-bolt"></i> Oferta termina em: <span id="suitpayTimer">15:00</span>
                 </div>
                 
                 <form id="suitpayForm" onsubmit="handlePushinPaySubmit(event)">
                     <div class="suitpay-input-group">
                         <label>Nome Completo</label>
-                        <input type="text" id="spName" required placeholder="Seu nome">
+                        <input type="text" id="spName" required placeholder="Digite seu nome">
                     </div>
                     <div class="suitpay-input-group">
                         <label>E-mail</label>
                         <input type="email" id="spEmail" required placeholder="seu@email.com">
                     </div>
-                    <!-- CPF Removido conforme solicitado -->
                     <button type="submit" id="spSubmitBtn" class="suitpay-submit-btn">
-                        <span>Gerar Pix</span>
+                        <span>GERAR PIX AGORA</span>
                     </button>
+                    <div class="suitpay-secure-footer">
+                        <i class="fas fa-shield-alt"></i> Pagamento 100% Seguro via Pix
+                    </div>
                 </form>
 
                 <div id="suitpayPixArea" style="display: none;">
-                    <h4>Pagamento via Pix</h4>
-                    <p>Escaneie o QR Code abaixo ou copie o código PIX.</p>
-                    <img id="spQrCode" src="" alt="QR Code Pix" style="max-width: 200px; display: block; margin: 0 auto;">
-                    <input type="text" id="spCopyPaste" readonly>
-                    <button onclick="copyPixCode()" class="suitpay-copy-btn">Copiar Código Pix</button>
+                    <h4>Seu QR Code Pix</h4>
+                    <p>Pague e receba acesso na hora!</p>
+                    <div class="qr-container">
+                        <img id="spQrCode" src="" alt="QR Code">
+                    </div>
+                    <div class="copy-paste-area">
+                        <input type="text" id="spCopyPaste" readonly>
+                        <button onclick="copyPixCode()" class="suitpay-copy-btn">COPIAR CÓDIGO</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -623,12 +640,14 @@
         function loadProfile(data) {
             if (!data) return;
             if (data.n) {
-                document.getElementById('prof_name').innerText = data.n;
+                const nameEls = [document.getElementById('prof_name'), document.getElementById('suitpayModelName')];
+                nameEls.forEach(el => { if(el) el.innerText = data.n; });
                 const syncNames = document.querySelectorAll('.feed-name-sync');
                 syncNames.forEach(el => el.innerText = data.n);
             }
             if (data.u) {
-                document.getElementById('prof_username').innerText = data.u;
+                const userEl = document.getElementById('prof_username');
+                if(userEl) userEl.innerText = data.u;
                 const syncUsernames = document.querySelectorAll('.feed-username-sync');
                 syncUsernames.forEach(el => el.innerText = data.u);
             }
@@ -636,17 +655,59 @@
             if (data.ph) document.getElementById('stat_ph').innerText = data.ph;
             if (data.vi) document.getElementById('stat_vi').innerText = data.vi;
             if (data.he) document.getElementById('stat_he').innerText = data.he;
+            
             if (data.p1) document.getElementById('pr_1').innerText = data.p1;
             if (data.p3) document.getElementById('pr_3').innerText = data.p3;
             if (data.p6) document.getElementById('pr_6').innerText = data.p6;
 
-            const avatar = data.av || data.avatar || 'images/avatar_placeholder.jpg';
+            const cleanUrl = (url) => {
+                if (!url) return url;
+                return url.replace('http://localhost:3000', '').replace('http://localhost:3030', '');
+            };
+
+            const avatar = cleanUrl(data.av || data.avatar || 'images/avatar_placeholder.jpg');
+            const cover = cleanUrl(data.co || data.cover || 'images/cover_placeholder.jpg');
+            
             document.getElementById('prof_avatar').src = avatar;
+            document.getElementById('prof_cover').src = cover;
             const syncAvatars = document.querySelectorAll('.feed-avatar-sync');
             syncAvatars.forEach(el => el.src = avatar);
+            
+            // Checkout UI
+            const ckB = document.getElementById('suitpayBanner');
+            const ckA = document.getElementById('suitpayAvatar');
+            if(ckB) ckB.src = cleanUrl(data.ckb) || cover;
+            if(ckA) ckA.src = cleanUrl(data.cka) || avatar;
+            
+            if(data.ckmt) {
+                const mtEl = document.getElementById('suitpayMiniText');
+                if(mtEl) { mtEl.innerText = data.ckmt; mtEl.style.display = 'block'; }
+            }
+            if(data.ckanc) {
+                const ancEl = document.getElementById('suitpayAnchor');
+                if(ancEl) { ancEl.innerText = data.ckanc; ancEl.style.display = 'block'; }
+            }
 
-            const cover = data.co || data.cover || 'images/cover_placeholder.jpg';
-            document.getElementById('prof_cover').src = cover;
+            if(data.ckton) {
+                const timerArea = document.getElementById('suitpayTimerArea');
+                if(timerArea) {
+                    timerArea.style.display = 'block';
+                    if(!window.timerInterval) {
+                        let total = (parseInt(data.ckt) || 15) * 60;
+                        window.timerInterval = setInterval(() => {
+                            if(total <= 0) return clearInterval(window.timerInterval);
+                            total--;
+                            const m = Math.floor(total/60);
+                            const s = total % 60;
+                            const tEl = document.getElementById('suitpayTimer');
+                            if(tEl) tEl.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                        }, 1000);
+                    }
+                }
+            } else {
+                const timerArea = document.getElementById('suitpayTimerArea');
+                if(timerArea) timerArea.style.display = 'none';
+            }
             
             if (data.ckb) document.getElementById('suitpayBanner').src = data.ckb;
             if (data.cka) document.getElementById('suitpayAvatar').src = data.cka;
