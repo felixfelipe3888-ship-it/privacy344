@@ -104,14 +104,13 @@ app.post('/pagamento', async (req, res) => {
         const syncUrl = process.env.SYNCPAY_BASE_URL || dbConfig.syncpay_url || 'https://api.syncpayments.com.br';
 
         if (syncId && syncSecret) {
-            console.log('Utilizando Gateway: SyncPay');
-            // Correção conforme documentação real da SyncPay
+            console.log('Iniciando tentativa com SyncPay...');
             const payloadSync = {
                 amount: parseFloat(finalAmount),
                 customer: {
                     name: finalClient.name,
                     email: finalClient.email,
-                    cpf: finalClient.document // Documentação usa .cpf em vez de .document
+                    cpf: String(finalClient.document).replace(/\D/g, "")
                 }
             };
             
@@ -121,8 +120,9 @@ app.post('/pagamento', async (req, res) => {
 
             for (const endpoint of endpoints) {
                 try {
-                    const fullUrl = syncUrl.endsWith('/') ? syncUrl.slice(0, -1) + endpoint : syncUrl + endpoint;
-                    console.log(`Tentando endpoint SyncPay: ${fullUrl}`);
+                    const baseUrl = syncUrl.endsWith('/') ? syncUrl.slice(0, -1) : syncUrl;
+                    const fullUrl = baseUrl + endpoint;
+                    console.log(`[SYNC] Tentando POST ${fullUrl}`);
                     
                     const response = await axios.post(fullUrl, payloadSync, {
                         headers: {
@@ -130,31 +130,27 @@ app.post('/pagamento', async (req, res) => {
                             'x-client-id': syncId,
                             'Content-Type': 'application/json'
                         },
-                        timeout: 5000 
+                        timeout: 2500 // Reduzido para evitar que o Railway dê 503 (timeout do proxy)
                     });
 
-                    // Correção na captura da resposta da SyncPay
-                    if (response.data?.paymentCodeBase64) {
+                    console.log(`[SYNC] Resposta recebida de ${endpoint}: ${response.status}`);
+                    
+                    if (response.data?.paymentCodeBase64 || response.data?.qr_code || response.data?.data?.qr_code) {
                         return res.json({
-                            qr_code: response.data.paymentCodeBase64 || '',
-                            pay_in_code: response.data.paymentCode || response.data.pix_copy_paste || ''
-                        });
-                    }
-                    // Fallback para o formato antigo se necessário
-                    if (response.data?.qr_code || response.data?.data?.qr_code) {
-                        return res.json({
-                            qr_code: response.data?.qr_code || response.data?.data?.qr_code || '',
-                            pay_in_code: response.data?.pay_in_code || response.data?.data?.pay_in_code || ''
+                            qr_code: response.data.paymentCodeBase64 || response.data?.qr_code || response.data?.data?.qr_code || '',
+                            pay_in_code: response.data.paymentCode || response.data?.pay_in_code || response.data?.data?.pay_in_code || response.data?.pix_copy_paste || ''
                         });
                     }
                 } catch (err) {
-                    console.warn(`Falha no endpoint ${endpoint}: ${err.message}`);
+                    const status = err.response?.status || 'TIMEOUT';
+                    console.warn(`[SYNC] Falha no endpoint ${endpoint}: ${status} - ${err.message}`);
                     lastError = err;
-                    if (err.response?.status !== 404) break; 
+                    // Se o erro não for 404 (ex: 401, 403, 400), provavelmente a URL está certa e as chaves ou dados estão errados.
+                    if (err.response && err.response.status !== 404) break; 
                 }
             }
             
-            console.warn('SyncPay falhou completamente. Tentando SuitPay como fallback...');
+            console.warn('SyncPay falhou completamente após tentar todos os endpoints.');
         }
 
         // 2. Fallback para SuitPay

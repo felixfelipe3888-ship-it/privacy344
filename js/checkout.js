@@ -135,6 +135,7 @@ async function handleSuitPaySubmit(event) {
         }
     } catch(err) {
         console.error('Erro na requisição direta:', err);
+        alert('Ocorreu um erro ao gerar o PIX. Verifique seu e-mail/CPF ou tente novamente mais tarde.');
     } finally {
         btn.innerHTML = originalBtnText;
         btn.disabled = false;
