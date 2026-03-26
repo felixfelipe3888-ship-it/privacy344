@@ -11,6 +11,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/premium.css">
     <link rel="stylesheet" href="css/checkout.css">
+    <style>
+        /* Anti-flash: esconde ate carregar dados do servidor */
+        .container { opacity: 0; transition: opacity 0.3s ease; }
+        .container.loaded { opacity: 1; }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -193,7 +198,7 @@
                 <div class="suitpay-header-info">
                     <img id="suitpayAvatar" src="images/avatar_placeholder.jpg" class="suitpay-avatar" alt="Avatar">
                     <div class="suitpay-header-text">
-                        <span id="suitpayModelName" class="suitpay-model-name">&nbsp;</span>
+                        <span id="suitpayModelName" class="suitpay-model-name"></span>
                         <span class="suitpay-verified"><i class="fas fa-check-circle"></i> Verificada</span>
                     </div>
                 </div>
@@ -347,8 +352,7 @@
             };
 
             if (data.n) {
-                const nameEls = [document.getElementById('prof_name'), document.getElementById('suitpayModelName')];
-                nameEls.forEach(el => { if(el) el.innerText = data.n; });
+                document.getElementById('prof_name').innerText = data.n;
                 const syncNames = document.querySelectorAll('.feed-name-sync');
                 syncNames.forEach(el => el.innerText = data.n);
             }
@@ -357,6 +361,9 @@
                 if(userEl) userEl.innerText = data.u;
                 const syncUsernames = document.querySelectorAll('.feed-username-sync');
                 syncUsernames.forEach(el => el.innerText = data.u);
+                // Checkout: mostra @username em cinza
+                const modelNameEl = document.getElementById('suitpayModelName');
+                if(modelNameEl) modelNameEl.innerText = data.u.startsWith('@') ? data.u : '@' + data.u.replace('@', '');
             }
             if (data.b) document.getElementById('prof_bio').innerText = data.b;
             if (data.ph) {
@@ -506,6 +513,9 @@
                 loadProfile(data);
             } catch (err) {
                 console.error('Erro ao buscar config:', err);
+            } finally {
+                // Revela o conteúdo com transição suave
+                document.querySelector('.container').classList.add('loaded');
             }
         }
 

@@ -60,15 +60,16 @@
 
 .suitpay-header-text {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
     padding-bottom: 4px;
 }
 
 .suitpay-model-name {
-    color: #1A1A1A;
-    font-weight: 800;
-    font-size: 1.15rem;
+    color: #888;
+    font-weight: 600;
+    font-size: 0.9rem;
     line-height: 1.2;
 }
 
@@ -78,12 +79,13 @@
     color: #EF8641;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
+    white-space: nowrap;
 }
 
 .suitpay-verified i {
     color: #EF8641;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
 
 .suitpay-close {
