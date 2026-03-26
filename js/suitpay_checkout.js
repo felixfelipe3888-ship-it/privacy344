@@ -99,6 +99,16 @@ async function handleSuitPaySubmit(event) {
         }
 
         let data;
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Erro da API completo:", errorData);
+            let errorMessage = "Erro na API da Suitpay: ";
+            if (errorData.details && errorData.details.message) errorMessage += errorData.details.message;
+            else if (errorData.details) errorMessage += JSON.stringify(errorData.details);
+            else errorMessage += errorData.error || "A resposta do pagamento foi inválida.";
+            
+            throw new Error(errorMessage);
+        }
         try {
             data = await response.json();
         } catch (parseEr) {
