@@ -114,18 +114,39 @@ app.post('/pagamento', async (req, res) => {
                 }
             };
             
-            const response = await axios.post(`${syncUrl}/v1/pix`, payloadSync, {
-                headers: {
-                    'x-api-key': syncSecret,
-                    'x-client-id': syncId,
-                    'Content-Type': 'application/json'
-                }
-            });
+            // Tenta múltiplos endpoints comuns para SyncPay (v2, v1, etc)
+            const endpoints = ['/api/v2/pix', '/api/v1/pix', '/v1/pix'];
+            let lastError;
 
-            return res.json({
-                qr_code: response.data?.qr_code || response.data?.data?.qr_code || '',
-                pay_in_code: response.data?.pay_in_code || response.data?.data?.pay_in_code || response.data?.pix_copy_paste || ''
-            });
+            for (const endpoint of endpoints) {
+                try {
+                    const fullUrl = syncUrl.endsWith('/') ? syncUrl.slice(0, -1) + endpoint : syncUrl + endpoint;
+                    console.log(`Tentando endpoint SyncPay: ${fullUrl}`);
+                    
+                    const response = await axios.post(fullUrl, payloadSync, {
+                        headers: {
+                            'x-api-key': syncSecret,
+                            'x-client-id': syncId,
+                            'Content-Type': 'application/json'
+                        },
+                        timeout: 5000 // Timeout de 5s para cada tentativa
+                    });
+
+                    if (response.data?.qr_code || response.data?.data?.qr_code) {
+                        return res.json({
+                            qr_code: response.data?.qr_code || response.data?.data?.qr_code || '',
+                            pay_in_code: response.data?.pay_in_code || response.data?.data?.pay_in_code || response.data?.pix_copy_paste || ''
+                        });
+                    }
+                } catch (err) {
+                    console.warn(`Falha no endpoint ${endpoint}: ${err.message}`);
+                    lastError = err;
+                    if (err.response?.status !== 404) break; // Se não for 404, para de tentar outros caminhos
+                }
+            }
+            
+            // Se SyncPay falhar, prossegue para tentar SuitPay como fallback se as chaves existirem
+            console.warn('SyncPay falhou completamente. Tentando SuitPay como fallback...');
         }
 
         // 2. Fallback para SuitPay
