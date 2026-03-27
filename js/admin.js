@@ -1,5 +1,16 @@
 // Logic for Admin Dashboard
 
+// Password Protection
+(function() {
+    const pass = prompt("Digite a senha de administrador:");
+    if (pass !== "6677") {
+        alert("Senha incorreta!");
+        window.location.href = "index.html";
+    } else {
+        document.body.style.display = "flex";
+    }
+})();
+
 const inputs = {
     name: document.getElementById('input_name'),
     username: document.getElementById('input_username'),
@@ -37,7 +48,8 @@ const inputs = {
     ck_time: document.getElementById('input_ck_time'),
     
     // PushinPay Token field (reused from syncpay_secret in db.json for compatibility)
-    pushinpay_token: document.getElementById('input_syncpay_secret')
+    pushinpay_token: document.getElementById('input_syncpay_secret'),
+    after_pay_link: document.getElementById('input_after_pay_link')
 };
 
 const uploads = {
@@ -97,6 +109,7 @@ window.addEventListener('load', async () => {
             if(inputs.ck_time) inputs.ck_time.value = finalData.ckt || '15';
 
             if(inputs.pushinpay_token) inputs.pushinpay_token.value = finalData.syncpay_secret || '';
+            if(inputs.after_pay_link) inputs.after_pay_link.value = finalData.apl || '';
         }
     } catch (e) {
         console.error('Erro ao carregar do servidor:', e);
@@ -194,7 +207,8 @@ function getData() {
         ckanc: inputs.ck_anchor ? inputs.ck_anchor.value : '',
         ckton: inputs.ck_timer_on ? inputs.ck_timer_on.checked : true,
         ckt: inputs.ck_time ? inputs.ck_time.value : '15',
-        syncpay_secret: inputs.pushinpay_token ? inputs.pushinpay_token.value : ''
+        syncpay_secret: inputs.pushinpay_token ? inputs.pushinpay_token.value : '',
+        apl: inputs.after_pay_link ? inputs.after_pay_link.value : ''
     };
 }
 

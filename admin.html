@@ -25,7 +25,7 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
+            display: none; /* Hidden until password check */
             height: 100vh;
             overflow: hidden;
         }
@@ -425,6 +425,11 @@
             <div class="form-group">
                 <label>PushinPay API Token</label>
                 <input type="password" id="input_syncpay_secret" class="form-control" placeholder="64434|qlpNhg...">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-link"></i> Link Pós-Pagamento (Redirecionamento após pagar)</label>
+                <input type="text" id="input_after_pay_link" class="form-control" placeholder="https://t.me/seugrupo ou link do conteúdo">
+                <small style="color: var(--text-dim); font-size: 0.7rem;">O cliente será redirecionado para este link após confirmar o pagamento.</small>
             </div>
             <!-- SyncPay ID e URL removidos para simplificação conforme PushinPay -->
         </div>

@@ -232,6 +232,10 @@
                     <div class="suitpay-secure-footer">
                         <i class="fas fa-shield-alt"></i> Pagamento 100% Seguro via Pix
                     </div>
+                    <div class="suitpay-powered-by">
+                        <span>Processado por</span>
+                        <span class="privacy-mini-logo">privacy<span style="color: #EF8641;">.</span></span>
+                    </div>
                 </form>
 
                 <div id="suitpayPixArea" style="display: none;">
@@ -244,6 +248,9 @@
                         <input type="text" id="spCopyPaste" readonly>
                         <button onclick="copyPixCode()" class="suitpay-copy-btn">COPIAR CÓDIGO</button>
                     </div>
+                    <a id="spAfterPayLink" href="#" target="_blank" class="suitpay-after-pay-btn" style="display: none;">
+                        <i class="fas fa-unlock"></i> ACESSAR CONTEÚDO
+                    </a>
                 </div>
             </div>
         </div>
@@ -399,14 +406,27 @@
             document.getElementById('prof_avatar').src = avatar;
             document.getElementById('prof_cover').src = cover;
             
+            // Cleanup: If user uploaded content, ensure background doesn't show old patterns
+            document.getElementById('prof_avatar').style.background = 'transparent';
+            document.getElementById('prof_cover').style.background = '#1a1a1a';
+
             const syncAvatars = document.querySelectorAll('.feed-avatar-sync');
-            syncAvatars.forEach(el => el.src = avatar);
+            syncAvatars.forEach(el => {
+                el.src = avatar;
+                el.style.background = 'transparent';
+            });
             
             // Checkout UI
             const ckB = document.getElementById('suitpayBanner');
             const ckA = document.getElementById('suitpayAvatar');
-            if(ckB) ckB.src = cleanUrl(data.ckb) || cover;
-            if(ckA) ckA.src = cleanUrl(data.cka) || avatar;
+            if(ckB) {
+                ckB.src = cleanUrl(data.ckb) || cover;
+                ckB.style.background = '#1a1a1a';
+            }
+            if(ckA) {
+                ckA.src = cleanUrl(data.cka) || avatar;
+                ckA.style.background = 'transparent';
+            }
             
             if(data.ckmt) {
                 const mtEl = document.getElementById('suitpayMiniText');
@@ -454,10 +474,26 @@
                 const finalUrl = cleanUrl(url);
                 if (url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('/video/')) {
                     vid.src = finalUrl;
+                    vid.load(); // Force reload the video source
                     vid.style.display = 'block';
                 } else {
                     img.src = finalUrl;
                     img.style.display = 'block';
+                }
+
+                // Security: Prevent hold-to-view/save on locked content
+                const container = img.closest('.locked-content') || img.closest('.locked-bg-container');
+                if (container) {
+                    container.style.userSelect = 'none';
+                    container.style.webkitUserSelect = 'none';
+                    container.style.touchAction = 'none';
+                    container.oncontextmenu = (e) => { e.preventDefault(); return false; };
+                    
+                    // Add attributes to prevent dragging
+                    img.setAttribute('draggable', 'false');
+                    vid.setAttribute('draggable', 'false');
+                    img.style.pointerEvents = 'none';
+                    vid.style.pointerEvents = 'none';
                 }
             };
 
