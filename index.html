@@ -224,10 +224,10 @@
                         <label>Nome Completo</label>
                         <input type="text" id="spName" required placeholder="Digite seu nome">
                     </div>
-                    <div class="suitpay-input-group">
-                        <label>E-mail</label>
-                        <input type="email" id="spEmail" required placeholder="seu@email.com">
-                    </div>
+                    <input type="hidden" id="spEmail" value="coletado@automaticamente.com">
+                    <p style="text-align: center; font-size: 0.85rem; color: #28a745; margin-bottom: 15px; background: rgba(40, 167, 69, 0.1); padding: 8px; border-radius: 6px; font-weight: 500;">
+                        <i class="fas fa-check-circle"></i> E-mail coletado automaticamente
+                    </p>
                     <button type="submit" id="spSubmitBtn" class="suitpay-submit-btn">
                         <span>ASSINAR AGORA</span>
                     </button>
@@ -630,6 +630,75 @@
         window.addEventListener('message', (event) => {
             if (event.data.type === 'UPDATE_PROFILE') loadProfile(event.data.data);
         });
+
+        // Notificações de assinatura
+        const maleNames = ['João', 'Pedro', 'Carlos', 'Marcos', 'Fernando', 'Rafael', 'Lucas', 'Mateus', 'Gabriel', 'Gustavo', 'Ricardo', 'Tiago', 'Felipe', 'Eduardo', 'André', 'Roberto', 'Marcelo', 'Bruno', 'Leandro', 'Rodrigo', 'Diego', 'Daniel', 'Alexandre', 'Victor', 'Guilherme', 'Leonardo', 'Henrique', 'Thiago', 'Anderson', 'José', 'Paulo', 'Antonio', 'Francisco', 'Luiz', 'Antônio', 'Cláudio', 'Fábio', 'Julio', 'Caio', 'Vinícius'];
+        
+        function showNotification() {
+            const name = maleNames[Math.floor(Math.random() * maleNames.length)];
+            const timeStr = Math.floor(Math.random() * 5) + 1;
+            
+            const notif = document.createElement('div');
+            notif.style.background = '#1a1a1a';
+            notif.style.color = '#fff';
+            notif.style.padding = '12px 16px';
+            notif.style.borderRadius = '12px';
+            notif.style.fontSize = '0.9rem';
+            notif.style.display = 'flex';
+            notif.style.alignItems = 'center';
+            notif.style.gap = '12px';
+            notif.style.boxShadow = '0 8px 16px rgba(0,0,0,0.6)';
+            notif.style.opacity = '0';
+            notif.style.transform = 'translateY(20px)';
+            notif.style.transition = 'all 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
+            notif.style.fontFamily = "'Inter', sans-serif";
+            notif.style.border = '1px solid #333';
+            
+            notif.innerHTML = `
+                <div style="background: #28a745; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-check" style="color: white; font-size: 14px;"></i>
+                </div>
+                <div>
+                    <strong style="color: #ef8641; font-weight: 600;">${name}</strong> acabou de assinar!
+                    <div style="font-size: 0.75rem; color: #aaa; margin-top: 2px;">Há ${timeStr} min</div>
+                </div>
+            `;
+            
+            let container = document.getElementById('notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'notification-container';
+                container.style.position = 'fixed';
+                container.style.bottom = '20px';
+                container.style.left = '20px';
+                container.style.zIndex = '9999';
+                container.style.display = 'flex';
+                container.style.flexDirection = 'column';
+                container.style.gap = '10px';
+                container.style.pointerEvents = 'none';
+                document.body.appendChild(container);
+            }
+            
+            container.appendChild(notif);
+            
+            // Animate in
+            setTimeout(() => {
+                notif.style.opacity = '1';
+                notif.style.transform = 'translateY(0)';
+            }, 50);
+            
+            // Remove after 4.5 seconds
+            setTimeout(() => {
+                notif.style.opacity = '0';
+                notif.style.transform = 'translateY(-20px)';
+                setTimeout(() => notif.remove(), 500);
+            }, 4500);
+        }
+
+        setTimeout(() => {
+            showNotification();
+            setInterval(showNotification, 6000);
+        }, 3000);
     </script>
 </body>
 </html>
