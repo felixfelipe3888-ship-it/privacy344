@@ -27,6 +27,12 @@
     to { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes suitpayPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); filter: brightness(1.1); box-shadow: 0 0 15px rgba(239, 134, 65, 0.4); }
+    100% { transform: scale(1); }
+}
+
 .suitpay-modal-header {
     height: 180px;
     position: relative;
@@ -109,6 +115,11 @@
     margin: 0;
     font-size: 1.2rem;
     color: #333;
+}
+
+.suitpay-modal-body.centered-content h3,
+.suitpay-modal-body.centered-content .suitpay-price-area {
+    text-align: center;
 }
 
 .suitpay-price-area {
@@ -200,6 +211,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    animation: suitpayPulse 2s infinite ease-in-out;
 }
 
 .suitpay-submit-btn:hover, .suitpay-copy-btn:hover {

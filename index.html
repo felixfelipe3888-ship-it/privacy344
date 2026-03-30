@@ -300,6 +300,8 @@
             document.getElementById('suitpayForm').style.display = 'block';
             document.getElementById('suitpayPixArea').style.display = 'none';
             document.getElementById('suitpayForm').reset();
+            const modalBody = document.querySelector('.suitpay-modal-body');
+            if (modalBody) modalBody.classList.remove('centered-content');
             document.getElementById('suitpayModal').style.display = 'flex';
         }
 
@@ -312,6 +314,8 @@
             if (header) header.style.display = 'block';
             if (timerArea) timerArea.style.display = 'block';
             if (videoArea) videoArea.style.display = 'block';
+            const modalBody = document.querySelector('.suitpay-modal-body');
+            if (modalBody) modalBody.classList.remove('centered-content');
         }
 
         async function handlePushinPaySubmit(event) {
@@ -346,10 +350,12 @@
                     const timerArea = document.getElementById('suitpayTimerArea');
                     const videoArea = document.getElementById('suitpayVideoArea');
                     const infoArea = document.querySelector('.suitpay-price-area');
+                    const modalBody = document.querySelector('.suitpay-modal-body');
                     if (header) header.style.display = 'none';
                     if (timerArea) timerArea.style.display = 'none';
                     if (videoArea) videoArea.style.display = 'none';
                     if (infoArea) infoArea.style.display = 'block'; // Keep plan price
+                    if (modalBody) modalBody.classList.add('centered-content');
 
                     document.getElementById('suitpayPixArea').style.display = 'block';
                     const qrRaw = data.qr_code;
