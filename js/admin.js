@@ -46,6 +46,7 @@ const inputs = {
     ck_anchor: document.getElementById('input_ck_anchor'),
     ck_timer_on: document.getElementById('input_ck_timer_on'),
     ck_time: document.getElementById('input_ck_time'),
+    ck_video: document.getElementById('input_ck_video'),
     
     // PushinPay Token field (reused from syncpay_secret in db.json for compatibility)
     pushinpay_token: document.getElementById('input_syncpay_secret'),
@@ -62,7 +63,8 @@ const uploads = {
     media4: document.getElementById('upload_media4_file'),
     media5: document.getElementById('upload_media5_file'),
     ck_banner: document.getElementById('upload_ck_banner_file'),
-    ck_avatar: document.getElementById('upload_ck_avatar_file')
+    ck_avatar: document.getElementById('upload_ck_avatar_file'),
+    ck_video: document.getElementById('upload_ck_video_file')
 };
 
 const iframe = document.getElementById('preview_iframe');
@@ -107,6 +109,7 @@ window.addEventListener('load', async () => {
             if(inputs.ck_anchor) inputs.ck_anchor.value = finalData.ckanc || 'R$ 149,99';
             if(inputs.ck_timer_on) inputs.ck_timer_on.checked = finalData.ckton !== false;
             if(inputs.ck_time) inputs.ck_time.value = finalData.ckt || '15';
+            if(inputs.ck_video) inputs.ck_video.value = finalData.ckvid || '';
 
             if(inputs.pushinpay_token) inputs.pushinpay_token.value = finalData.syncpay_secret || '';
             if(inputs.after_pay_link) inputs.after_pay_link.value = finalData.apl || '';
@@ -156,6 +159,7 @@ Object.keys(uploads).forEach(key => {
                     else if (key === 'media5') inputs.media5.value = fileUrl;
                     else if (key === 'ck_banner') inputs.ck_banner.value = fileUrl;
                     else if (key === 'ck_avatar') inputs.ck_avatar.value = fileUrl;
+                    else if (key === 'ck_video') inputs.ck_video.value = fileUrl;
                     label.innerHTML = '<i class="fas fa-check"></i>';
                 } else { throw new Error('Falha no upload'); }
             } catch (err) {
@@ -207,6 +211,7 @@ function getData() {
         ckanc: inputs.ck_anchor ? inputs.ck_anchor.value : '',
         ckton: inputs.ck_timer_on ? inputs.ck_timer_on.checked : true,
         ckt: inputs.ck_time ? inputs.ck_time.value : '15',
+        ckvid: clean(inputs.ck_video ? inputs.ck_video.value : ''),
         syncpay_secret: inputs.pushinpay_token ? inputs.pushinpay_token.value : '',
         apl: inputs.after_pay_link ? inputs.after_pay_link.value : ''
     };

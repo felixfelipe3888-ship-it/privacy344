@@ -219,6 +219,10 @@
                     <i class="fas fa-bolt"></i> Oferta termina em: <span id="suitpayTimer">15:00</span>
                 </div>
                 
+                <div id="suitpayVideoArea" style="display: none; margin: 10px auto; max-width: 90%; text-align: center;">
+                    <video id="suitpayVideo" autoplay loop muted playsinline webkit-playsinline style="width: 100%; border-radius: 10px; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.5); object-fit: cover; max-height: 200px;"></video>
+                </div>
+                
                 <form id="suitpayForm" onsubmit="handlePushinPaySubmit(event)">
                     <div class="suitpay-input-group">
                         <label>Nome Completo</label>
@@ -304,8 +308,10 @@
             // Reset visibility
             const header = document.querySelector('.suitpay-modal-header');
             const timerArea = document.getElementById('suitpayTimerArea');
+            const videoArea = document.getElementById('suitpayVideoArea');
             if (header) header.style.display = 'block';
             if (timerArea) timerArea.style.display = 'block';
+            if (videoArea) videoArea.style.display = 'block';
         }
 
         async function handlePushinPaySubmit(event) {
@@ -338,9 +344,11 @@
                     // Hide header and timer areas to clean up for QR code
                     const header = document.querySelector('.suitpay-modal-header');
                     const timerArea = document.getElementById('suitpayTimerArea');
+                    const videoArea = document.getElementById('suitpayVideoArea');
                     const infoArea = document.querySelector('.suitpay-price-area');
                     if (header) header.style.display = 'none';
                     if (timerArea) timerArea.style.display = 'none';
+                    if (videoArea) videoArea.style.display = 'none';
                     if (infoArea) infoArea.style.display = 'block'; // Keep plan price
 
                     document.getElementById('suitpayPixArea').style.display = 'block';
@@ -509,6 +517,20 @@
                 }
             }
 
+            if(data.ckvid) {
+                const vidEl = document.getElementById('suitpayVideo');
+                const vidArea = document.getElementById('suitpayVideoArea');
+                if(vidEl && vidArea) {
+                    vidEl.src = cleanUrl(data.ckvid);
+                    vidEl.load();
+                    vidEl.play().catch(()=>{});
+                    vidArea.style.display = 'block';
+                }
+            } else {
+                const vidArea = document.getElementById('suitpayVideoArea');
+                if(vidArea) vidArea.style.display = 'none';
+            }
+
             const setMedia = (id, url) => {
                 const img = document.getElementById('locked_bg_' + id);
                 const vid = document.getElementById('locked_vid_' + id);
@@ -639,7 +661,7 @@
             const timeStr = Math.floor(Math.random() * 5) + 1;
             
             const notif = document.createElement('div');
-            notif.style.background = '#1a1a1a';
+            notif.style.background = '#1E1E1E';
             notif.style.color = '#fff';
             notif.style.padding = '12px 16px';
             notif.style.borderRadius = '12px';
@@ -652,15 +674,18 @@
             notif.style.transform = 'translateY(20px)';
             notif.style.transition = 'all 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
             notif.style.fontFamily = "'Inter', sans-serif";
-            notif.style.border = '1px solid #333';
+            notif.style.border = '1px solid #EF8641';
+            
+            // Tratamento do valor formatado, garantindo o uso do currentPlanPrice sem problemas.
+            const precoFormatado = currentPlanPrice ? currentPlanPrice.toFixed(2).replace('.', ',') : '29,90';
             
             notif.innerHTML = `
-                <div style="background: #28a745; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                <div style="background: #EF8641; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-check" style="color: white; font-size: 14px;"></i>
                 </div>
                 <div>
-                    <strong style="color: #ef8641; font-weight: 600;">${name}</strong> acabou de assinar!
-                    <div style="font-size: 0.75rem; color: #aaa; margin-top: 2px;">Há ${timeStr} min</div>
+                    <strong style="color: #ef8641; font-weight: 600;">${name}</strong> assinou o VIP
+                    <div style="font-size: 0.75rem; color: #aaa; margin-top: 2px;">Assinatura no valor de R$ ${precoFormatado}</div>
                 </div>
             `;
             
@@ -687,17 +712,17 @@
                 notif.style.transform = 'translateY(0)';
             }, 50);
             
-            // Remove after 4.5 seconds
+            // Remove after 6 seconds visually
             setTimeout(() => {
                 notif.style.opacity = '0';
                 notif.style.transform = 'translateY(-20px)';
                 setTimeout(() => notif.remove(), 500);
-            }, 4500);
+            }, 6000);
         }
 
         setTimeout(() => {
             showNotification();
-            setInterval(showNotification, 6000);
+            setInterval(showNotification, 15000);
         }, 3000);
     </script>
 </body>
