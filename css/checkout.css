@@ -4,9 +4,10 @@
     background: rgba(0, 0, 0, 0.7);
     z-index: 9999;
     display: flex;
-    align-items: center;
+    align-items: center; /* Centralizado por padrão */
     justify-content: center;
-    padding: 15px;
+    padding: 20px 15px;
+    overflow-y: auto; /* Permite rolar se o modal for maior que a tela */
 }
 
 .suitpay-modal-container {
@@ -111,7 +112,7 @@
 }
 
 .suitpay-price-area {
-    margin: 8px 0 10px;
+    margin: 5px 0 8px;
 }
 
 .suitpay-anchor {
@@ -149,8 +150,8 @@
 .suitpay-footer-logo {
     display: flex;
     justify-content: center;
-    margin-top: 10px;
-    margin-bottom: 15px;
+    margin-top: 5px;
+    margin-bottom: 10px;
     opacity: 0.6;
 }
 
@@ -160,7 +161,7 @@
 }
 
 .suitpay-input-group {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .suitpay-input-group label {
@@ -259,15 +260,15 @@
 .suitpay-timer-box {
     background: #FFF5EE;
     color: #EF8641;
-    padding: 10px 15px;
+    padding: 8px 12px;
     border-radius: 10px;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin: 15px auto;
+    margin: 10px auto;
     width: fit-content;
     border: 1px dashed #EF8641;
 }
@@ -311,7 +312,8 @@
 
 @media (max-width: 450px) {
     .suitpay-modal-overlay {
-        padding: 10px;
+        padding: 5px;
+        align-items: flex-start; /* Começa do topo em celulares */
     }
     .suitpay-modal-container {
         border-radius: 16px;
