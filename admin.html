@@ -418,13 +418,41 @@
                 <input type="number" id="input_ck_time" class="form-control" value="15">
             </div>
             <div class="form-group">
-                <label>Vídeo do Checkout (Embaixo do Timer)</label>
-                <div class="d-flex gap-2">
-                    <input type="text" id="input_ck_video" class="form-control" placeholder="Link do MP4 (Opcional)">
+                <div id="upload_ck_video_file_container" class="mt-2">
                     <label for="upload_ck_video_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
-                        <i class="fas fa-upload"></i>
+                        <i class="fas fa-upload"></i> Upload Vídeo
                     </label>
                     <input type="file" id="upload_ck_video_file" hidden accept="video/mp4">
+                </div>
+            </div>
+            
+            <h4 style="color: var(--primary-orange); font-size: 0.9rem; margin-top: 25px; margin-bottom: 10px; font-weight: 600;">Order Bump (Oferta Extra)</h4>
+            <div class="form-group">
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="input_ck_ob_on">
+                    <label class="form-check-label" for="input_ck_ob_on" style="color: var(--text-dim); cursor: pointer;">Ativar Order Bump</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Título da Oferta</label>
+                <input type="text" id="input_ck_ob_title" class="form-control" placeholder="Ex: Conteúdo VIP Vitalício">
+            </div>
+            <div class="form-group">
+                <label>Texto da Oferta (Descrição)</label>
+                <textarea id="input_ck_ob_text" class="form-control" rows="2" placeholder="Ex: Adicione acesso vitalício por apenas..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Valor Adicional (R$)</label>
+                <input type="text" id="input_ck_ob_price" class="form-control" placeholder="19,90">
+            </div>
+            <div class="form-group">
+                <label>Foto/Perfil do Order Bump</label>
+                <div class="d-flex gap-2">
+                    <input type="text" id="input_ck_ob_img" class="form-control" placeholder="Link da imagem">
+                    <label for="upload_ck_ob_img_file" class="btn-generate m-0" style="width: auto; padding: 10px 15px; background: #555;">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="upload_ck_ob_img_file" hidden accept="image/*">
                 </div>
             </div>
         </div>

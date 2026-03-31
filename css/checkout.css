@@ -43,7 +43,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 25%;
+    object-position: center center;
     display: block;
 }
 
@@ -346,3 +346,70 @@
         font-size: 1rem;
     }
 }
+
+/* Order Bump Styles */
+.order-bump-box {
+    margin: 15px 0;
+    padding: 12px;
+    border: 2px dashed #EF8641;
+    border-radius: 12px;
+    background: #FFF9F6;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left !important;
+}
+
+.order-bump-box:hover {
+    background: #FFF3ED;
+    transform: scale(1.02);
+}
+
+.order-bump-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid #FFD9C6;
+}
+
+.order-bump-info {
+    flex: 1;
+}
+
+.order-bump-title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #EF8641;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.order-bump-title i {
+    font-size: 0.8rem;
+    animation: suitpayPulse 1s infinite;
+}
+
+.order-bump-text {
+    font-size: 0.78rem;
+    color: #555;
+    line-height: 1.3;
+}
+
+.order-bump-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.order-bump-checkbox {
+    width: 22px;
+    height: 22px;
+    accent-color: #EF8641;
+    cursor: pointer;
+}
+

@@ -223,6 +223,24 @@
                     <video id="suitpayVideo" autoplay loop muted playsinline webkit-playsinline style="width: 100%; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.4); object-fit: cover; max-height: 130px;"></video>
                 </div>
                 
+                <div id="suitpayOrderBumpArea" style="display: none;">
+                    <div class="order-bump-box" onclick="toggleOrderBump()">
+                        <img id="suitpayObImg" src="" class="order-bump-img">
+                        <div class="order-bump-info">
+                            <div class="order-bump-title">
+                                <i class="fas fa-star"></i> <span id="suitpayObTitle"></span>
+                            </div>
+                            <div class="order-bump-text" id="suitpayObText"></div>
+                            <div class="order-bump-price-tag" style="color: #333; font-weight: 700; font-size: 0.85rem; margin-top: 2px;">
+                                Por apenas +R$ <span id="suitpayObPriceDisplay">0,00</span>
+                            </div>
+                        </div>
+                        <div class="order-bump-checkbox-wrapper">
+                            <input type="checkbox" id="ob_checkbox" class="order-bump-checkbox" onclick="event.stopPropagation(); updateTotalWithBump();">
+                        </div>
+                    </div>
+                </div>
+                
                 <form id="suitpayForm" onsubmit="handlePushinPaySubmit(event)">
                     <div class="suitpay-input-group">
                         <label>Nome Completo</label>
@@ -270,6 +288,29 @@
     <script>
         // --- LÓGICA DE CHECKOUT E PERFIL ---
         let currentPlanPrice = 29.90;
+        let basePlanPrice = 29.90;
+        let orderBumpPrice = 0;
+
+        function toggleOrderBump() {
+            const cb = document.getElementById('ob_checkbox');
+            if (cb) {
+                cb.checked = !cb.checked;
+                updateTotalWithBump();
+            }
+        }
+
+        function updateTotalWithBump() {
+            const cb = document.getElementById('ob_checkbox');
+            const priceEl = document.getElementById('suitpayPlanPrice');
+            if (!cb || !priceEl) return;
+
+            let finalPrice = basePlanPrice;
+            if (cb.checked) {
+                finalPrice += orderBumpPrice;
+            }
+            currentPlanPrice = finalPrice;
+            priceEl.innerText = 'R$ ' + finalPrice.toFixed(2).replace('.', ',');
+        }
 
         function togglePromo() {
             const plans = document.getElementById('promo-plans');
@@ -295,7 +336,12 @@
         function openSuitPayModal(planName, priceStr) {
             document.getElementById('suitpayPlanName').innerText = 'Assinatura - ' + planName;
             document.getElementById('suitpayPlanPrice').innerText = 'R$ ' + priceStr;
-            currentPlanPrice = parseFloat(priceStr.replace('.', '').replace(',', '.'));
+            basePlanPrice = parseFloat(priceStr.replace('.', '').replace(',', '.'));
+            currentPlanPrice = basePlanPrice;
+            
+            const cb = document.getElementById('ob_checkbox');
+            if (cb) cb.checked = false; // Reset bump
+            
             syncModalImages();
             document.getElementById('suitpayForm').style.display = 'block';
             document.getElementById('suitpayPixArea').style.display = 'none';
@@ -311,9 +357,11 @@
             const header = document.querySelector('.suitpay-modal-header');
             const timerArea = document.getElementById('suitpayTimerArea');
             const videoArea = document.getElementById('suitpayVideoArea');
+            const obArea = document.getElementById('suitpayOrderBumpArea');
             if (header) header.style.display = 'block';
             if (timerArea) timerArea.style.display = 'block';
             if (videoArea) videoArea.style.display = 'block';
+            if (obArea) obArea.style.display = 'block';
             const modalBody = document.querySelector('.suitpay-modal-body');
             if (modalBody) modalBody.classList.remove('centered-content');
         }
@@ -349,11 +397,13 @@
                     const header = document.querySelector('.suitpay-modal-header');
                     const timerArea = document.getElementById('suitpayTimerArea');
                     const videoArea = document.getElementById('suitpayVideoArea');
+                    const obArea = document.getElementById('suitpayOrderBumpArea');
                     const infoArea = document.querySelector('.suitpay-price-area');
                     const modalBody = document.querySelector('.suitpay-modal-body');
                     if (header) header.style.display = 'none';
                     if (timerArea) timerArea.style.display = 'none';
                     if (videoArea) videoArea.style.display = 'none';
+                    if (obArea) obArea.style.display = 'none';
                     if (infoArea) infoArea.style.display = 'block'; // Keep plan price
                     if (modalBody) modalBody.classList.add('centered-content');
 
@@ -535,6 +585,25 @@
             } else {
                 const vidArea = document.getElementById('suitpayVideoArea');
                 if(vidArea) vidArea.style.display = 'none';
+            }
+
+            if(data.ckobon) {
+                const obArea = document.getElementById('suitpayOrderBumpArea');
+                const obTitle = document.getElementById('suitpayObTitle');
+                const obText = document.getElementById('suitpayObText');
+                const obPrice = document.getElementById('suitpayObPriceDisplay');
+                const obImg = document.getElementById('suitpayObImg');
+                if(obArea) {
+                    if(obTitle) obTitle.innerText = data.ckobt || 'Oferta Especial';
+                    if(obText) obText.innerText = data.ckobx || '';
+                    if(obPrice) obPrice.innerText = data.ckobp || '0,00';
+                    if(obImg) obImg.src = cleanUrl(data.ckobi) || cleanUrl(data.av) || 'images/avatar_placeholder.jpg';
+                    orderBumpPrice = parseFloat((data.ckobp || '0').replace(',', '.'));
+                    obArea.style.display = 'block';
+                }
+            } else {
+                const obArea = document.getElementById('suitpayOrderBumpArea');
+                if(obArea) obArea.style.display = 'none';
             }
 
             const setMedia = (id, url) => {
