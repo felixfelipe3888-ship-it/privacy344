@@ -401,6 +401,7 @@
                 if (data.qr_code) {
                     document.getElementById('suitpayForm').style.display = 'none';
                     // Hide header and timer areas to clean up for QR code
+                    const header = document.querySelector('.suitpay-modal-header');
                     const timerArea = document.getElementById('suitpayTimerArea');
                     const videoArea = document.getElementById('suitpayVideoArea');
                     const obArea = document.getElementById('suitpayOrderBumpArea');
