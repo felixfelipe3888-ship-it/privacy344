@@ -290,6 +290,10 @@
         let currentPlanPrice = 29.90;
         let basePlanPrice = 29.90;
         let orderBumpPrice = 0;
+        
+        let hasTimer = true;
+        let hasVideo = false;
+        let hasOrderBump = false;
 
         function toggleOrderBump() {
             const cb = document.getElementById('ob_checkbox');
@@ -342,6 +346,14 @@
             const cb = document.getElementById('ob_checkbox');
             if (cb) cb.checked = false; // Reset bump
             
+            // Respect visibility settings
+            const timerArea = document.getElementById('suitpayTimerArea');
+            const videoArea = document.getElementById('suitpayVideoArea');
+            const obArea = document.getElementById('suitpayOrderBumpArea');
+            if (timerArea) timerArea.style.display = hasTimer ? 'block' : 'none';
+            if (videoArea) videoArea.style.display = hasVideo ? 'block' : 'none';
+            if (obArea) obArea.style.display = hasOrderBump ? 'block' : 'none';
+
             syncModalImages();
             document.getElementById('suitpayForm').style.display = 'block';
             document.getElementById('suitpayPixArea').style.display = 'none';
@@ -353,15 +365,9 @@
 
         function closeSuitPayModal() { 
             document.getElementById('suitpayModal').style.display = 'none'; 
-            // Reset visibility
+            // Reset visibility for next open
             const header = document.querySelector('.suitpay-modal-header');
-            const timerArea = document.getElementById('suitpayTimerArea');
-            const videoArea = document.getElementById('suitpayVideoArea');
-            const obArea = document.getElementById('suitpayOrderBumpArea');
             if (header) header.style.display = 'block';
-            if (timerArea) timerArea.style.display = 'block';
-            if (videoArea) videoArea.style.display = 'block';
-            if (obArea) obArea.style.display = 'block';
             const modalBody = document.querySelector('.suitpay-modal-body');
             if (modalBody) modalBody.classList.remove('centered-content');
         }
@@ -394,7 +400,6 @@
                 if (data.qr_code) {
                     document.getElementById('suitpayForm').style.display = 'none';
                     // Hide header and timer areas to clean up for QR code
-                    const header = document.querySelector('.suitpay-modal-header');
                     const timerArea = document.getElementById('suitpayTimerArea');
                     const videoArea = document.getElementById('suitpayVideoArea');
                     const obArea = document.getElementById('suitpayOrderBumpArea');
@@ -528,12 +533,14 @@
                 el.style.background = 'transparent';
             });
             
+            const cover_checkout = cleanUrl(data.ckb || data.co || data.cover || 'images/cover_placeholder.jpg');
+            
             // Checkout UI
             const ckB = document.getElementById('suitpayBanner');
             const ckA = document.getElementById('suitpayAvatar');
             if(ckB) {
-                ckB.src = cleanUrl(data.ckb) || cover;
-                ckB.style.background = '#1a1a1a';
+                ckB.src = cover_checkout;
+                ckB.style.background = '#000';
             }
             if(ckA) {
                 ckA.src = cleanUrl(data.cka) || avatar;
@@ -550,6 +557,7 @@
             }
 
             if(data.ckton) {
+                hasTimer = true;
                 const timerArea = document.getElementById('suitpayTimerArea');
                 if(timerArea) {
                     timerArea.style.display = 'block';
@@ -566,6 +574,7 @@
                     }
                 }
             } else {
+                hasTimer = false;
                 const timerArea = document.getElementById('suitpayTimerArea');
                 if(timerArea) {
                     timerArea.style.display = 'none';
@@ -574,6 +583,7 @@
             }
 
             if(data.ckvid) {
+                hasVideo = true;
                 const vidEl = document.getElementById('suitpayVideo');
                 const vidArea = document.getElementById('suitpayVideoArea');
                 if(vidEl && vidArea) {
@@ -583,11 +593,13 @@
                     vidArea.style.display = 'block';
                 }
             } else {
+                hasVideo = false;
                 const vidArea = document.getElementById('suitpayVideoArea');
                 if(vidArea) vidArea.style.display = 'none';
             }
 
             if(data.ckobon) {
+                hasOrderBump = true;
                 const obArea = document.getElementById('suitpayOrderBumpArea');
                 const obTitle = document.getElementById('suitpayObTitle');
                 const obText = document.getElementById('suitpayObText');
@@ -602,6 +614,7 @@
                     obArea.style.display = 'block';
                 }
             } else {
+                hasOrderBump = false;
                 const obArea = document.getElementById('suitpayOrderBumpArea');
                 if(obArea) obArea.style.display = 'none';
             }
