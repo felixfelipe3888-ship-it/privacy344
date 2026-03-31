@@ -331,10 +331,11 @@
         }
 
         function syncModalImages() {
-            const coverElement = document.getElementById('prof_cover');
-            const avatarElement = document.getElementById('prof_avatar');
-            if(coverElement && coverElement.src) document.getElementById('suitpayBanner').src = coverElement.src;
-            if(avatarElement && avatarElement.src) document.getElementById('suitpayAvatar').src = avatarElement.src;
+            // Sincronização automática comentada para priorizar o banner configurado no painel Admin
+            // const coverElement = document.getElementById('prof_cover');
+            // const avatarElement = document.getElementById('prof_avatar');
+            // if(coverElement && coverElement.src) document.getElementById('suitpayBanner').src = coverElement.src;
+            // if(avatarElement && avatarElement.src) document.getElementById('suitpayAvatar').src = avatarElement.src;
         }
 
         function openSuitPayModal(planName, priceStr) {
@@ -540,7 +541,6 @@
             const ckA = document.getElementById('suitpayAvatar');
             if(ckB) {
                 ckB.src = cover_checkout;
-                ckB.style.background = '#000';
             }
             if(ckA) {
                 ckA.src = cleanUrl(data.cka) || avatar;
