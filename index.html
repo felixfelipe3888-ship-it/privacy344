@@ -18,6 +18,25 @@
     </style>
 </head>
 <body>
+    <!-- AGE GATE MODAL -->
+    <div id="ageGateModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; background: #F5F5F5; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif;">
+        <div style="background: #FFFFFF; padding: 40px 30px; border-radius: 16px; text-align: center; max-width: 90%; width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #eaeaea;">
+            <div style="margin-bottom: 24px;">
+                <img src="images/logo-black.svg" alt="Privacy Logo" onerror="this.onerror=null; this.src='images/logo.png';" style="height: 35px; width: auto;">
+            </div>
+            <h2 style="color: #222222; font-size: 20px; margin-bottom: 15px; font-weight: 700;">Aviso de Conteúdo Sensível</h2>
+            <p style="color: #777777; font-size: 14px; margin-bottom: 30px; line-height: 1.6;">
+                Esta página contém conteúdo para maiores de 18 anos. Ao clicar no botão abaixo, você confirma que tem mais de 18 anos e concorda em acessar este conteúdo.
+            </p>
+            <button onclick="document.getElementById('ageGateModal').style.display='none'" style="background: linear-gradient(90deg, #F9AF77, #FFD1A9); color: #1A1A1A; border: none; padding: 15px 20px; font-size: 16px; font-weight: 600; border-radius: 999px; width: 100%; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(245, 129, 112, 0.2);" onmouseover="this.style.background='linear-gradient(90deg, #FFC09A, #FFA08A)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='linear-gradient(90deg, #F9AF77, #FFD1A9)'; this.style.transform='translateY(0)';">
+                SOU MAIOR DE 18 ANOS
+            </button>
+            <a href="https://www.google.com" style="display: block; color: #777777; font-size: 12px; margin-top: 20px; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#FF7A00'" onmouseout="this.style.color='#777777'">
+                Sair / Não tenho 18 anos
+            </a>
+        </div>
+    </div>
+
     <!-- Navbar Removida para Limpeza Visual -->
 
     <div class="container">
