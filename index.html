@@ -470,7 +470,16 @@
             
             const cleanUrl = (url) => {
                 if (!url) return url;
-                return url.replace('http://localhost:3000', '').replace('http://localhost:3030', '');
+                // Se for uma URL completa do próprio servidor, remove o domínio
+                try {
+                    const urlObj = new URL(url);
+                    if (urlObj.hostname === window.location.hostname || urlObj.hostname === 'localhost') {
+                        return urlObj.pathname + urlObj.search + urlObj.hash;
+                    }
+                } catch (e) {
+                    // Se não for uma URL válida (ex: já é relativa), ignora erro
+                }
+                return url.replace(/http:\/\/localhost:\d+/g, '');
             };
 
             if (data.n) {
@@ -653,10 +662,17 @@
                 if (!url) return;
 
                 const finalUrl = cleanUrl(url);
-                if (url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('/video/')) {
+                const isVideo = url.match(/\.(mp4|webm|ogg|mov|m4v|avi|wmv)$/i) || url.includes('/video/') || url.includes('uploads/') && url.split('.').pop().toLowerCase().match(/(mp4|webm|ogg|mov|m4v)/);
+                
+                if (isVideo) {
                     vid.src = finalUrl;
                     vid.load(); 
-                    vid.play().catch(e => console.log("Autoplay blocked, retry on click"));
+                    vid.muted = true; // Garantir mudo para autoplay
+                    vid.setAttribute('playsinline', ''); // Para iOS
+                    vid.setAttribute('webkit-playsinline', '');
+                    vid.play().catch(e => {
+                        console.log("Autoplay bloqueado, tentando novamente em interação");
+                    });
                     vid.style.display = 'block';
                     
                     // Interaction Fallback

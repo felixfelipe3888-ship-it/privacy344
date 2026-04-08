@@ -191,7 +191,17 @@ Object.keys(uploads).forEach(key => {
 function getData() {
     const clean = (url) => {
         if (!url || typeof url !== 'string') return url;
-        return url.replace(/http:\/\/localhost:\d+/g, '');
+        // Remove localhost ou o domínio atual se for absoluto
+        try {
+            const urlObj = new URL(url);
+            if (urlObj.hostname === window.location.hostname || urlObj.hostname === 'localhost') {
+                return urlObj.pathname + urlObj.search + urlObj.hash;
+            }
+        } catch (e) { }
+        return url.replace(/https?:\/\/[^\/]+/i, (match) => {
+            if (match.includes(window.location.hostname) || match.includes('localhost')) return '';
+            return match;
+        });
     };
 
     return {
