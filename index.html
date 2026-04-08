@@ -16,6 +16,15 @@
         .container { opacity: 0; transition: opacity 0.3s ease; }
         .container.loaded { opacity: 1; }
     </style>
+    <!-- UTMify Pixel -->
+    <script>
+      window.pixelId = "69d6a4f3bd81dafec35ac461";
+      var a = document.createElement("script");
+      a.setAttribute("async", "");
+      a.setAttribute("defer", "");
+      a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+      document.head.appendChild(a);
+    </script>
 </head>
 <body>
     <!-- AGE GATE MODAL -->
@@ -440,6 +449,14 @@
                     const qrRaw = data.qr_code;
                     document.getElementById('spQrCode').src = qrRaw.startsWith('data:') ? qrRaw : 'data:image/png;base64,' + qrRaw;
                     document.getElementById('spCopyPaste').value = data.pay_in_code || '';
+
+                    // UTMify Event Tracking
+                    if (window.utmify && window.utmify.sendEvent) {
+                        window.utmify.sendEvent("Purchase", {
+                            value: currentPlanPrice.toString(),
+                            currency: "BRL"
+                        });
+                    }
                 } else {
                     throw new Error('Falha ao gerar o código do PIX.');
                 }
