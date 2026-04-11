@@ -178,16 +178,60 @@ async function uploadToFreeImageHost(file) {
     return json.image.url;
 }
 
+// ─── Upload de VÍDEO: 0x0.st (primário) → Litterbox (fallback) ───────────────
+async function uploadToZeroX(file) {
+    // 0x0.st: suporta qualquer arquivo até 512 MB, retorna URL direta do .mp4
+    const fd = new FormData();
+    fd.append('file', file);
+    const r = await fetch('https://0x0.st', { method: 'POST', body: fd });
+    if (!r.ok) throw new Error('0x0.st HTTP ' + r.status);
+    const url = (await r.text()).trim();
+    if (!url.startsWith('http')) throw new Error('0x0.st resposta inválida');
+    return url;
+}
+
+async function uploadToLitterbox(file) {
+    // Litterbox: suporta vídeos grandes (72h de duração temporária)
+    const fd = new FormData();
+    fd.append('reqtype', 'fileupload');
+    fd.append('time', '72h');
+    fd.append('fileToUpload', file);
+    const r = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', {
+        method: 'POST',
+        body: fd
+    });
+    if (!r.ok) throw new Error('Litterbox HTTP ' + r.status);
+    const url = (await r.text()).trim();
+    if (!url.startsWith('http')) throw new Error('Litterbox resposta inválida');
+    return url;
+}
+
 async function uploadMedia(file) {
-    // Tenta Imgur primeiro; se falhar tenta o fallback
-    try {
-        return await uploadToImgur(file);
-    } catch (e1) {
-        console.warn('Imgur falhou, tentando fallback...', e1.message);
+    const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|avi|webm|mkv)$/i.test(file.name);
+
+    if (isVideo) {
+        // Vídeos: 0x0.st → Litterbox
         try {
-            return await uploadToFreeImageHost(file);
-        } catch (e2) {
-            throw new Error('Todos os hosts falharam. Verifique sua conexão e tente novamente.');
+            return await uploadToZeroX(file);
+        } catch (e1) {
+            console.warn('0x0.st falhou, tentando Litterbox...', e1.message);
+            try {
+                return await uploadToLitterbox(file);
+            } catch (e2) {
+                throw new Error('Falha no upload do vídeo.\n• 0x0.st: ' + e1.message + '\n• Litterbox: ' + e2.message);
+            }
+        }
+    } else {
+        // Imagens: Imgur → freeimage.host
+        try {
+            return await uploadToImgur(file);
+        } catch (e1) {
+            console.warn('Imgur falhou, tentando fallback...', e1.message);
+            try {
+                return await uploadToFreeImageHost(file);
+            } catch (e2) {
+                throw new Error('Falha no upload da imagem.\n• Imgur: ' + e1.message + '\n• FreeImage: ' + e2.message);
+            }
         }
     }
 }
@@ -199,9 +243,12 @@ Object.keys(uploads).forEach(key => {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Limite de 32 MB para ImgBB free
-            if (file.size > 32 * 1024 * 1024) {
-                alert('Arquivo muito grande! O limite é 32 MB. Comprima o arquivo e tente novamente.');
+            const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|avi|webm|mkv)$/i.test(file.name);
+            const maxSize = isVideo ? 512 * 1024 * 1024 : 32 * 1024 * 1024;
+            const maxLabel = isVideo ? '512 MB' : '32 MB';
+
+            if (file.size > maxSize) {
+                alert(`Arquivo muito grande! O limite para ${isVideo ? 'vídeos' : 'imagens'} é ${maxLabel}.\nComprima o arquivo e tente novamente.`);
                 e.target.value = '';
                 return;
             }
@@ -209,7 +256,7 @@ Object.keys(uploads).forEach(key => {
             const label = e.target.previousElementSibling;
             const originalIcon = label.innerHTML;
             label.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            label.title = 'Enviando...';
+            label.title = isVideo ? 'Enviando vídeo (pode demorar)...' : 'Enviando imagem...';
 
             try {
                 const fileUrl = await uploadMedia(file);
@@ -236,7 +283,7 @@ Object.keys(uploads).forEach(key => {
                 updatePreview();
             } catch (err) {
                 console.error('Erro no upload:', err);
-                alert('❌ Erro ao enviar imagem:\n' + err.message + '\n\nDica: Você também pode colar o link direto da imagem no campo de texto.');
+                alert('❌ Erro ao enviar arquivo:\n' + err.message + '\n\nDica: Você também pode colar o link direto no campo de texto.');
                 label.innerHTML = '<i class="fas fa-times"></i>';
                 label.style.background = '#dc3545';
             } finally {
