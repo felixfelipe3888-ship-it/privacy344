@@ -39,8 +39,10 @@ app.get('/api/load-config', (req, res) => {
             fileToRead = path.join(__dirname, 'db.json');
         }
         if (fs.existsSync(fileToRead)) {
-            const data = fs.readFileSync(fileToRead, 'utf8');
-            res.json(JSON.parse(data));
+            const data = JSON.parse(fs.readFileSync(fileToRead, 'utf8'));
+            // SEGURANÇA: nunca enviar o token para o frontend
+            delete data.syncpay_secret;
+            res.json(data);
         } else {
             res.json({});
         }
@@ -51,7 +53,21 @@ app.get('/api/load-config', (req, res) => {
 
 app.post('/api/save-config', (req, res) => {
     try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(req.body, null, 2), 'utf8');
+        const newData = req.body;
+        // SEGURANÇA: preservar o token salvo anteriormente - jamais sobrescrever com vazio
+        // O token só pode ser atualizado se vier explicitamente no body E não for vazio
+        let existingToken = process.env.PUSHINPAY_TOKEN || '';
+        if (fs.existsSync(DB_FILE)) {
+            try {
+                const existing = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+                existingToken = existing.syncpay_secret || existingToken;
+            } catch(e) {}
+        }
+        // Só atualiza o token se o frontend enviou um novo valor não-vazio
+        newData.syncpay_secret = (newData.syncpay_secret && newData.syncpay_secret.trim())
+            ? newData.syncpay_secret.trim()
+            : existingToken;
+        fs.writeFileSync(DB_FILE, JSON.stringify(newData, null, 2), 'utf8');
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Erro ao salvar configurações' });
@@ -120,7 +136,7 @@ app.post('/pagamento', async (req, res) => {
             try { dbConfig = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch (e) {}
         }
 
-        const HARDCODED_TOKEN = '64434|qlpNhgXR6IKWr5KKLcxGr5KyeyiQaEOn1SyzduKVdda6701c';
+        const HARDCODED_TOKEN = ''; // TOKEN REMOVIDO DO CÓDIGO - use variável de ambiente PUSHINPAY_TOKEN no Vercel
         const TOKEN = process.env.PUSHINPAY_TOKEN || dbConfig.syncpay_secret || HARDCODED_TOKEN;
 
         if (!amount) return res.status(400).json({ error: 'Valor não informado.' });

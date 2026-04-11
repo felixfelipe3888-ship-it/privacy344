@@ -2,3 +2,7 @@ node_modules/
 .env
 package-lock.json
 *.log
+db.json
+test-*.js
+t.txt
+test.txt

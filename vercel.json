@@ -10,6 +10,17 @@
       "use": "@vercel/static"
     }
   ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -22,6 +33,38 @@
     {
       "src": "/status",
       "dest": "/server.js"
+    },
+    {
+      "src": "/db\\.json",
+      "dest": "/server.js",
+      "headers": { "x-block": "true" },
+      "status": 403,
+      "continue": false
+    },
+    {
+      "src": "/server\\.js",
+      "status": 403,
+      "continue": false
+    },
+    {
+      "src": "/package\\.json",
+      "status": 403,
+      "continue": false
+    },
+    {
+      "src": "/package-lock\\.json",
+      "status": 403,
+      "continue": false
+    },
+    {
+      "src": "/test.*\\.js",
+      "status": 403,
+      "continue": false
+    },
+    {
+      "src": "/\\.env.*",
+      "status": 403,
+      "continue": false
     },
     {
       "src": "/(.*)",
