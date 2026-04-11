@@ -13,6 +13,38 @@ const PORT = process.env.PORT || 3030;
 app.use(cors());
 app.use(express.json());
 
+// ─── Sessão de Admin (senha verificada no servidor) ───────────────
+// A senha NUNCA vai para o frontend — fica apenas aqui no servidor
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin@Privacy2026';
+const activeSessions = new Map(); // token -> expiry timestamp
+
+function generateToken() {
+    const arr = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) arr[i] = Math.floor(Math.random() * 256);
+    return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+app.post('/api/admin-login', (req, res) => {
+    const { password } = req.body;
+    if (!password || password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ error: 'Senha incorreta.' });
+    }
+    const token = generateToken();
+    const expiry = Date.now() + 8 * 60 * 60 * 1000; // 8 horas
+    activeSessions.set(token, expiry);
+    res.json({ token });
+});
+
+app.get('/api/admin-check', (req, res) => {
+    const token = req.headers['x-admin-token'] || '';
+    const expiry = activeSessions.get(token);
+    if (!expiry || Date.now() > expiry) {
+        activeSessions.delete(token);
+        return res.status(401).json({ valid: false });
+    }
+    res.json({ valid: true });
+});
+
 // Caminho do arquivo de banco de dados
 const isVercel = process.env.VERCEL || process.env.AWS_REGION;
 const DB_FILE = isVercel ? '/tmp/db.json' : path.join(__dirname, 'db.json');

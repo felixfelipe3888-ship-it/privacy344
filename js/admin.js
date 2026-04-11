@@ -1,13 +1,44 @@
 // Logic for Admin Dashboard
 
-// Password Protection
-(function() {
+// Password Protection — senha verificada no SERVIDOR (n\u00e3o aparece no c\u00f3digo do browser)
+(async function() {
+    // 1. Verifica se j\u00e1 tem uma sess\u00e3o ativa (evita pedir senha toda vez)
+    const savedToken = sessionStorage.getItem('admin_token');
+    if (savedToken) {
+        try {
+            const check = await fetch('/api/admin-check', {
+                headers: { 'x-admin-token': savedToken }
+            });
+            if (check.ok) {
+                document.body.style.display = 'flex';
+                return; // Sess\u00e3o ainda v\u00e1lida, libera o painel
+            }
+        } catch(e) {}
+        sessionStorage.removeItem('admin_token');
+    }
+
+    // 2. Pede a senha ao usu\u00e1rio
     const pass = prompt('Digite a senha de administrador:');
-    if (pass !== '6677') {
-        alert('Senha incorreta!');
+    if (!pass) { window.location.href = 'index.html'; return; }
+
+    // 3. Envia a senha para o SERVIDOR validar (senha nunca fica exposta no c\u00f3digo)
+    try {
+        const res = await fetch('/api/admin-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pass })
+        });
+        if (res.ok) {
+            const { token } = await res.json();
+            sessionStorage.setItem('admin_token', token);
+            document.body.style.display = 'flex';
+        } else {
+            alert('Senha incorreta!');
+            window.location.href = 'index.html';
+        }
+    } catch(e) {
+        alert('Erro ao verificar senha. Tente novamente.');
         window.location.href = 'index.html';
-    } else {
-        document.body.style.display = 'flex';
     }
 })();
 
