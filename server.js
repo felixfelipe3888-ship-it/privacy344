@@ -21,14 +21,19 @@ app.get("/", (req, res) => {
 });
 
 // Caminho do arquivo de banco de dados
-const DB_FILE = path.join(__dirname, 'db.json');
+const isVercel = process.env.VERCEL || process.env.AWS_REGION;
+const DB_FILE = isVercel ? '/tmp/db.json' : path.join(__dirname, 'db.json');
 
 // --- Rotas de Admin ---
 
 app.get('/api/load-config', (req, res) => {
     try {
-        if (fs.existsSync(DB_FILE)) {
-            const data = fs.readFileSync(DB_FILE, 'utf8');
+        let fileToRead = DB_FILE;
+        if (isVercel && !fs.existsSync(DB_FILE) && fs.existsSync(path.join(__dirname, 'db.json'))) {
+            fileToRead = path.join(__dirname, 'db.json');
+        }
+        if (fs.existsSync(fileToRead)) {
+            const data = fs.readFileSync(fileToRead, 'utf8');
             res.json(JSON.parse(data));
         } else {
             res.json({});
@@ -49,7 +54,7 @@ app.post('/api/save-config', (req, res) => {
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'uploads');
+        const uploadDir = isVercel ? '/tmp/uploads' : path.join(__dirname, 'uploads');
         if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
         cb(null, uploadDir);
     },
@@ -60,9 +65,48 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-app.post('/api/upload', upload.single('file'), (req, res) => {
+app.post('/api/upload', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
-    res.json({ url: '/uploads/' + req.file.filename });
+    
+    try {
+        // Envia para o Catbox.moe para obter uma URL pública e permanente
+        const fileData = fs.readFileSync(req.file.path);
+        const boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW';
+        
+        let body = Buffer.concat([
+            Buffer.from(`--${boundary}\r\n`),
+            Buffer.from(`Content-Disposition: form-data; name="reqtype"\r\n\r\n`),
+            Buffer.from(`fileupload\r\n`),
+            Buffer.from(`--${boundary}\r\n`),
+            Buffer.from(`Content-Disposition: form-data; name="fileToUpload"; filename="${req.file.originalname}"\r\n`),
+            Buffer.from(`Content-Type: ${req.file.mimetype}\r\n\r\n`),
+            fileData,
+            Buffer.from(`\r\n--${boundary}--\r\n`)
+        ]);
+
+        const response = await axios.post('https://catbox.moe/user/api.php', body, {
+            headers: {
+                'Content-Type': `multipart/form-data; boundary=${boundary}`,
+                'Content-Length': body.length
+            },
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity
+        });
+
+        const url = response.data;
+        
+        // Remove arquivo temporário se possível
+        try { fs.unlinkSync(req.file.path); } catch(e) {}
+        
+        if (url && url.startsWith('http')) {
+            res.json({ url: url });
+        } else {
+            res.json({ url: '/uploads/' + req.file.filename });
+        }
+    } catch (err) {
+        console.error('Erro no upload para o catbox:', err.message);
+        res.json({ url: '/uploads/' + req.file.filename });
+    }
 });
 
 // --- Rota de Pagamento (PUSHINPAY) ---

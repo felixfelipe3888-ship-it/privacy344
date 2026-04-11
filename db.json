@@ -6,7 +6,7 @@
   "vi": "66",
   "lo": "12",
   "he": "563",
-  "av": "/uploads/1774461384967-950517808.png",
+  "av": "/uploads/file-1775870553189-826611628.jpeg",
   "co": "/uploads/1774461448698-903575436.webp",
   "p1": "12,02",
   "p3": "34,09",
@@ -30,5 +30,12 @@
   "ckanc": "R$ 99,99",
   "ckton": true,
   "ckt": "15",
-  "syncpay_secret": "64434|qlpNhgXR6IKWr5KKLcxGr5KyeyiQaEOn1SyzduKVdda6701c"
+  "ckvid": "",
+  "ckobon": false,
+  "ckobt": "",
+  "ckobx": "",
+  "ckobp": "",
+  "ckobi": "",
+  "syncpay_secret": "64434|qlpNhgXR6IKWr5KKLcxGr5KyeyiQaEOn1SyzduKVdda6701c",
+  "apl": ""
 }

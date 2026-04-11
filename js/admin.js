@@ -179,8 +179,10 @@ Object.keys(uploads).forEach(key => {
                 } else { throw new Error('Falha no upload'); }
             } catch (err) {
                 console.error(err);
+                alert('Erro ao enviar arquivo! O arquivo pode ser muito grande ou o servidor não suporta uploads locais (ex: Vercel).');
                 label.innerHTML = '<i class="fas fa-times"></i>';
             } finally {
+                e.target.value = ''; // Limpa o input para poder enviar o mesmo arquivo novamente se falhar
                 setTimeout(() => label.innerHTML = originalIcon, 2000);
                 updatePreview();
             }
