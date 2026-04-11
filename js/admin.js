@@ -126,7 +126,7 @@ window.addEventListener('load', async () => {
             if(inputs.ck_ob_price) inputs.ck_ob_price.value = finalData.ckobp || '';
             if(inputs.ck_ob_img) inputs.ck_ob_img.value = finalData.ckobi || '';
 
-            if(inputs.pushinpay_token) inputs.pushinpay_token.value = finalData.syncpay_secret || '';
+            if(inputs.pushinpay_token) inputs.pushinpay_token.value = ''; // token não é retornado pela API por segurança
             if(inputs.after_pay_link) inputs.after_pay_link.value = finalData.apl || '';
         }
     } catch (e) {
