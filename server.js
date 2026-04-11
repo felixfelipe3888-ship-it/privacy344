@@ -69,26 +69,18 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
     
     try {
-        // Envia para o Catbox.moe para obter uma URL pública e permanente
-        const fileData = fs.readFileSync(req.file.path);
-        const boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW';
+        const FormData = require('form-data');
+        const fs = require('fs');
+        const form = new FormData();
         
-        let body = Buffer.concat([
-            Buffer.from(`--${boundary}\r\n`),
-            Buffer.from(`Content-Disposition: form-data; name="reqtype"\r\n\r\n`),
-            Buffer.from(`fileupload\r\n`),
-            Buffer.from(`--${boundary}\r\n`),
-            Buffer.from(`Content-Disposition: form-data; name="fileToUpload"; filename="${req.file.originalname}"\r\n`),
-            Buffer.from(`Content-Type: ${req.file.mimetype}\r\n\r\n`),
-            fileData,
-            Buffer.from(`\r\n--${boundary}--\r\n`)
-        ]);
+        form.append('reqtype', 'fileupload');
+        form.append('fileToUpload', fs.createReadStream(req.file.path), {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype
+        });
 
-        const response = await axios.post('https://catbox.moe/user/api.php', body, {
-            headers: {
-                'Content-Type': `multipart/form-data; boundary=${boundary}`,
-                'Content-Length': body.length
-            },
+        const response = await axios.post('https://catbox.moe/user/api.php', form, {
+            headers: form.getHeaders(),
             maxBodyLength: Infinity,
             maxContentLength: Infinity
         });
@@ -99,12 +91,17 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         try { fs.unlinkSync(req.file.path); } catch(e) {}
         
         if (url && url.startsWith('http')) {
+            console.log('Upload concluído no catbox:', url);
             res.json({ url: url });
         } else {
+            console.error('Resposta inválida do catbox:', url);
             res.json({ url: '/uploads/' + req.file.filename });
         }
     } catch (err) {
         console.error('Erro no upload para o catbox:', err.message);
+        if (err.response) {
+            console.error('Detalhes do erro do catbox:', err.response.data);
+        }
         res.json({ url: '/uploads/' + req.file.filename });
     }
 });
