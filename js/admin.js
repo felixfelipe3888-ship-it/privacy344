@@ -1,27 +1,16 @@
 // Logic for Admin Dashboard
 
-// Password Protection (hash SHA-256 — a senha real não fica exposta no código)
-(async function() {
-    // Hash SHA-256 da senha correta — para mudar a senha, gere o hash em: https://emn178.github.io/online-tools/sha256.html
-    const SENHA_HASH = 'b0baee9d279d34fa1dfd71aadb908c3f6a5304e6f3e8bb7e4671e13dc83c5e0e'; // hash de "6677"
-    
+// Password Protection
+(function() {
     const pass = prompt('Digite a senha de administrador:');
-    if (!pass) { window.location.href = 'index.html'; return; }
-    
-    // Calcula o hash do que o usuário digitou e compara
-    const encoder = new TextEncoder();
-    const data = encoder.encode(pass);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    if (hashHex !== SENHA_HASH) {
+    if (pass !== '6677') {
         alert('Senha incorreta!');
         window.location.href = 'index.html';
     } else {
         document.body.style.display = 'flex';
     }
 })();
+
 
 const inputs = {
     name: document.getElementById('input_name'),
