@@ -680,7 +680,10 @@
 
                 const finalUrl = cleanUrl(url);
                 const urlSemQuery = finalUrl.split('?')[0].toLowerCase();
-                const isVideo = urlSemQuery.match(/\.(mp4|webm|ogg|mov|m4v|avi|wmv)$/) || urlSemQuery.includes('/video/');
+                const isVideo = urlSemQuery.match(/\.(mp4|webm|ogg|mov|m4v|avi|wmv)$/) || 
+                                urlSemQuery.includes('/video/') || 
+                                urlSemQuery.includes('0x0.st') || 
+                                urlSemQuery.includes('litterbox');
                 
                 if (isVideo) {
                     vid.src = finalUrl;
