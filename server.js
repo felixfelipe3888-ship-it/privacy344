@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 
+const FormData = require('form-data');
 const app = express();
 const PORT = process.env.PORT || 3030;
 
@@ -12,17 +13,22 @@ const PORT = process.env.PORT || 3030;
 app.use(cors());
 app.use(express.json());
 
-// Servir arquivos estáticos (HTML, CSS, JS) do diretório atual
+// Caminho do arquivo de banco de dados
+const isVercel = process.env.VERCEL || process.env.AWS_REGION;
+const DB_FILE = isVercel ? '/tmp/db.json' : path.join(__dirname, 'db.json');
+
+// Servir arquivos estáticos
 app.use(express.static(path.join(__dirname)));
+if (isVercel) {
+    // No Vercel, os uploads temporários ficam em /tmp/uploads
+    // Mapeamos a rota /uploads para esse diretório
+    app.use('/uploads', express.static('/tmp/uploads'));
+}
 
 // Rota principal (Unificada)
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
-
-// Caminho do arquivo de banco de dados
-const isVercel = process.env.VERCEL || process.env.AWS_REGION;
-const DB_FILE = isVercel ? '/tmp/db.json' : path.join(__dirname, 'db.json');
 
 // --- Rotas de Admin ---
 
@@ -69,10 +75,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
     
     try {
-        const FormData = require('form-data');
-        const fs = require('fs');
         const form = new FormData();
-        
         form.append('reqtype', 'fileupload');
         form.append('fileToUpload', fs.createReadStream(req.file.path), {
             filename: req.file.originalname,
@@ -82,29 +85,29 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         const response = await axios.post('https://catbox.moe/user/api.php', form, {
             headers: form.getHeaders(),
             maxBodyLength: Infinity,
-            maxContentLength: Infinity
+            maxContentLength: Infinity,
+            timeout: 60000 // Aumentado para 60s
         });
 
         const url = response.data;
         
-        // Remove arquivo temporário se possível
-        try { fs.unlinkSync(req.file.path); } catch(e) {}
-        
-        if (url && url.startsWith('http')) {
+        if (url && typeof url === 'string' && url.startsWith('http')) {
             console.log('Upload concluído no catbox:', url);
+            // Remove arquivo temporário
+            try { fs.unlinkSync(req.file.path); } catch(e) {}
             res.json({ url: url });
         } else {
             console.error('Resposta inválida do catbox:', url);
+            // Mantém o arquivo local como fallback
             res.json({ url: '/uploads/' + req.file.filename });
         }
     } catch (err) {
         console.error('Erro no upload para o catbox:', err.message);
-        if (err.response) {
-            console.error('Detalhes do erro do catbox:', err.response.data);
-        }
+        // Mantém o arquivo local como fallback no Vercel (/tmp/uploads)
         res.json({ url: '/uploads/' + req.file.filename });
     }
 });
+
 
 // --- Rota de Pagamento (PUSHINPAY) ---
 
