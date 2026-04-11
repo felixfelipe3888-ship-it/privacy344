@@ -145,46 +145,107 @@ Object.values(inputs).forEach(input => {
     }
 });
 
+// ─── Upload direto para Imgur (sem passar pelo servidor) ─────────────────────
+// Client ID público anônimo do Imgur — funciona sem criar conta.
+const IMGUR_CLIENT_ID = 'Client-ID 546c25a59c58ad7';
+
+async function uploadToImgur(file) {
+    const fd = new FormData();
+    fd.append('image', file);
+    const r = await fetch('https://api.imgur.com/3/image', {
+        method: 'POST',
+        headers: { 'Authorization': IMGUR_CLIENT_ID },
+        body: fd
+    });
+    if (!r.ok) throw new Error('Imgur HTTP ' + r.status);
+    const json = await r.json();
+    if (!json.success) throw new Error('Imgur: ' + (json.data?.error || 'erro desconhecido'));
+    return json.data.link;
+}
+
+async function uploadToFreeImageHost(file) {
+    // Fallback: freeimage.host API pública
+    const fd = new FormData();
+    fd.append('source', file);
+    fd.append('type', 'file');
+    const r = await fetch('https://freeimage.host/api/1/upload?key=6d207e02198a847aa98d0a2a901485a2&action=upload', {
+        method: 'POST',
+        body: fd
+    });
+    if (!r.ok) throw new Error('FreeImage HTTP ' + r.status);
+    const json = await r.json();
+    if (json.status_code !== 200) throw new Error('FreeImage: erro ' + json.status_code);
+    return json.image.url;
+}
+
+async function uploadMedia(file) {
+    // Tenta Imgur primeiro; se falhar tenta o fallback
+    try {
+        return await uploadToImgur(file);
+    } catch (e1) {
+        console.warn('Imgur falhou, tentando fallback...', e1.message);
+        try {
+            return await uploadToFreeImageHost(file);
+        } catch (e2) {
+            throw new Error('Todos os hosts falharam. Verifique sua conexão e tente novamente.');
+        }
+    }
+}
+
 // File Uploads
 Object.keys(uploads).forEach(key => {
     if(uploads[key]) {
         uploads[key].addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
+
+            // Limite de 32 MB para ImgBB free
+            if (file.size > 32 * 1024 * 1024) {
+                alert('Arquivo muito grande! O limite é 32 MB. Comprima o arquivo e tente novamente.');
+                e.target.value = '';
+                return;
+            }
+
             const label = e.target.previousElementSibling;
             const originalIcon = label.innerHTML;
             label.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-            const formData = new FormData();
-            formData.append('file', file);
+            label.title = 'Enviando...';
 
             try {
-                const response = await fetch('/api/upload', { method: 'POST', body: formData });
-                const result = await response.json();
-                if (result.url) {
-                    const fileUrl = result.url;
-                    if (key === 'avatar') inputs.avatar.value = fileUrl;
-                    else if (key === 'cover') inputs.cover.value = fileUrl;
-                    else if (key === 'video') inputs.video_feed.value = fileUrl;
-                    else if (key === 'media1') inputs.media1.value = fileUrl;
-                    else if (key === 'media2') inputs.media2.value = fileUrl;
-                    else if (key === 'media3') inputs.media3.value = fileUrl;
-                    else if (key === 'media4') inputs.media4.value = fileUrl;
-                    else if (key === 'media5') inputs.media5.value = fileUrl;
-                    else if (key === 'ck_banner') inputs.ck_banner.value = fileUrl;
-                    else if (key === 'ck_avatar') inputs.ck_avatar.value = fileUrl;
-                    else if (key === 'ck_video') inputs.ck_video.value = fileUrl;
-                    else if (key === 'ck_ob_img') inputs.ck_ob_img.value = fileUrl;
-                    label.innerHTML = '<i class="fas fa-check"></i>';
-                } else { throw new Error('Falha no upload'); }
-            } catch (err) {
-                console.error(err);
-                alert('Erro ao enviar arquivo! O arquivo pode ser muito grande ou o servidor não suporta uploads locais (ex: Vercel).');
-                label.innerHTML = '<i class="fas fa-times"></i>';
-            } finally {
-                e.target.value = ''; // Limpa o input para poder enviar o mesmo arquivo novamente se falhar
-                setTimeout(() => label.innerHTML = originalIcon, 2000);
+                const fileUrl = await uploadMedia(file);
+                
+                // Mapear chave → input
+                const inputMap = {
+                    avatar: inputs.avatar,
+                    cover: inputs.cover,
+                    video: inputs.video_feed,
+                    media1: inputs.media1,
+                    media2: inputs.media2,
+                    media3: inputs.media3,
+                    media4: inputs.media4,
+                    media5: inputs.media5,
+                    ck_banner: inputs.ck_banner,
+                    ck_avatar: inputs.ck_avatar,
+                    ck_video: inputs.ck_video,
+                    ck_ob_img: inputs.ck_ob_img,
+                };
+                if (inputMap[key]) inputMap[key].value = fileUrl;
+                
+                label.innerHTML = '<i class="fas fa-check"></i>';
+                label.style.background = '#28a745';
                 updatePreview();
+            } catch (err) {
+                console.error('Erro no upload:', err);
+                alert('❌ Erro ao enviar imagem:\n' + err.message + '\n\nDica: Você também pode colar o link direto da imagem no campo de texto.');
+                label.innerHTML = '<i class="fas fa-times"></i>';
+                label.style.background = '#dc3545';
+            } finally {
+                e.target.value = '';
+                setTimeout(() => {
+                    label.innerHTML = originalIcon;
+                    label.style.background = '#555';
+                    label.title = '';
+                }, 2500);
             }
         });
     }
