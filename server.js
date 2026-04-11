@@ -136,8 +136,7 @@ app.post('/pagamento', async (req, res) => {
             try { dbConfig = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch (e) {}
         }
 
-        const FALLBACK_TOKEN = '64434|qlpNhgXR6IKWr5KKLcxGr5KyeyiQaEOn1SyzduKVdda6701c';
-        const TOKEN = process.env.PUSHINPAY_TOKEN || dbConfig.syncpay_secret || FALLBACK_TOKEN;
+        const TOKEN = process.env.PUSHINPAY_TOKEN || dbConfig.syncpay_secret || '';
 
         if (!amount) return res.status(400).json({ error: 'Valor não informado.' });
 
