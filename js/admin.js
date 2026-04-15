@@ -238,11 +238,33 @@ async function uploadToLitterbox(file) {
     return url;
 }
 
+async function uploadToServer(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const r = await fetch('/api/upload', {
+        method: 'POST',
+        body: fd
+    });
+    if (!r.ok) throw new Error('Server Upload Error');
+    const json = await r.json();
+    if (!json.url) throw new Error('No URL returned from server');
+    return json.url;
+}
+
 async function uploadMedia(file) {
     const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|avi|webm|mkv)$/i.test(file.name);
 
+    // Tenta primeiro o servidor (especialmente para arquivos menores que 4.5MB)
+    if (file.size < 4 * 1024 * 1024) {
+        try {
+            return await uploadToServer(file);
+        } catch (e) {
+            console.warn('Server upload failed, trying external...', e.message);
+        }
+    }
+
     if (isVideo) {
-        // Vídeos: 0x0.st → Litterbox
+        // Vídeos grandes: 0x0.st → Litterbox
         try {
             return await uploadToZeroX(file);
         } catch (e1) {
@@ -254,7 +276,7 @@ async function uploadMedia(file) {
             }
         }
     } else {
-        // Imagens: Imgur → freeimage.host
+        // Imagens: tenta servidor primeiro, depois Imgur
         try {
             return await uploadToImgur(file);
         } catch (e1) {
@@ -308,14 +330,18 @@ Object.keys(uploads).forEach(key => {
                     ck_video: inputs.ck_video,
                     ck_ob_img: inputs.ck_ob_img,
                 };
-                if (inputMap[key]) inputMap[key].value = fileUrl;
+                if (inputMap[key]) {
+                    inputMap[key].value = fileUrl;
+                    // Força o evento input para o preview atualizar
+                    inputMap[key].dispatchEvent(new Event('input'));
+                }
                 
                 label.innerHTML = '<i class="fas fa-check"></i>';
                 label.style.background = '#28a745';
                 updatePreview();
             } catch (err) {
                 console.error('Erro no upload:', err);
-                alert('❌ Erro ao enviar arquivo:\n' + err.message + '\n\nDica: Você também pode colar o link direto no campo de texto.');
+                alert('❌ ERRO NO UPLOAD:\n' + err.message + '\n\nIsso pode ser o tamanho do arquivo ou bloqueio do servidor.');
                 label.innerHTML = '<i class="fas fa-times"></i>';
                 label.style.background = '#dc3545';
             } finally {
@@ -419,9 +445,13 @@ async function saveData(e) {
         if (response.ok) {
             localStorage.setItem('profileData', JSON.stringify(data));
             if (btn) { btn.innerHTML = '<i class="fas fa-check"></i>'; btn.style.background = '#28a745'; }
-        } else { throw new Error('Erro ao salvar'); }
+        } else { 
+            const errData = await response.json();
+            throw new Error(errData.error || 'Erro no servidor ao salvar'); 
+        }
     } catch (e) {
         console.error(e);
+        alert('❌ ERRO AO SALVAR:\n' + e.message + '\n\nVerifique se as chaves do Supabase no Vercel estão corretas.');
         localStorage.setItem('profileData', JSON.stringify(data));
     } finally {
         if (btn) {

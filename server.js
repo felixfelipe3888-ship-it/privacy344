@@ -49,57 +49,99 @@ app.get('/api/admin-check', (req, res) => {
 const isVercel = process.env.VERCEL || process.env.AWS_REGION;
 const DB_FILE = isVercel ? '/tmp/db.json' : path.join(__dirname, 'db.json');
 
-// Servir arquivos estáticos
-app.use(express.static(path.join(__dirname)));
-if (isVercel) {
-    // No Vercel, os uploads temporários ficam em /tmp/uploads
-    // Mapeamos a rota /uploads para esse diretório
-    app.use('/uploads', express.static('/tmp/uploads'));
-}
+// --- Supabase Config (Persistência Real no Vercel) ---
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
-// Rota principal (Unificada)
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
-});
+async function getDB() {
+    // Se tiver Supabase configurado, usa ele (recomendado para Vercel)
+    if (SUPABASE_URL && SUPABASE_KEY) {
+        try {
+            const url = `${SUPABASE_URL}/rest/v1/configs?id=eq.main&select=data`;
+            const res = await axios.get(url, {
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            });
+            if (res.data && res.data[0]) return res.data[0].data;
+        } catch (e) { console.error('Supabase Load Error:', e.message); }
+    }
 
-// --- Rotas de Admin ---
-
-app.get('/api/load-config', (req, res) => {
+    // Fallback: Arquivo local
     try {
         let fileToRead = DB_FILE;
         if (isVercel && !fs.existsSync(DB_FILE) && fs.existsSync(path.join(__dirname, 'db.json'))) {
             fileToRead = path.join(__dirname, 'db.json');
         }
         if (fs.existsSync(fileToRead)) {
-            const data = JSON.parse(fs.readFileSync(fileToRead, 'utf8'));
-            // SEGURANÇA: nunca enviar o token para o frontend
-            delete data.syncpay_secret;
-            res.json(data);
-        } else {
-            res.json({});
+            return JSON.parse(fs.readFileSync(fileToRead, 'utf8'));
         }
+    } catch (err) { console.error('Local Load Error:', err); }
+    return {};
+}
+
+async function saveDB(data) {
+    if (SUPABASE_URL && SUPABASE_KEY) {
+        try {
+            const url = `${SUPABASE_URL}/rest/v1/configs`;
+            await axios.post(url, { id: 'main', data: data }, {
+                headers: { 
+                    'apikey': SUPABASE_KEY, 
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'resolution=merge-duplicates' // Faz o UPSERT (Cria ou Atualiza)
+                }
+            });
+            console.log('✅ Salvo no Supabase (Upsert)');
+        } catch (e) {
+            console.error('Supabase Save Error:', e.response?.data || e.message);
+            // Se estiver no Vercel e o Supabase falhar, precisamos avisar o erro
+            if (isVercel) throw new Error('Erro ao salvar no Supabase: ' + (e.response?.data?.message || e.message));
+        }
+    }
+
+    // Sempre salva localmente também (ou no /tmp do Vercel)
+    try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+        console.log('✅ Salvo no arquivo local');
+    } catch (err) { console.error('Local Save Error:', err); }
+}
+
+// Servir arquivos estáticos
+app.use(express.static(path.join(__dirname)));
+if (isVercel) {
+    app.use('/uploads', express.static('/tmp/uploads'));
+}
+
+// Rota principal
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// --- Rotas de Admin ---
+
+app.get('/api/load-config', async (req, res) => {
+    try {
+        const data = await getDB();
+        // SEGURANÇA: nunca enviar o token para o frontend
+        delete data.syncpay_secret;
+        res.json(data);
     } catch (err) {
         res.status(500).json({ error: 'Erro ao carregar configurações' });
     }
 });
 
-app.post('/api/save-config', (req, res) => {
+app.post('/api/save-config', async (req, res) => {
     try {
         const newData = req.body;
-        // SEGURANÇA: preservar o token salvo anteriormente - jamais sobrescrever com vazio
-        // O token só pode ser atualizado se vier explicitamente no body E não for vazio
-        let existingToken = process.env.PUSHINPAY_TOKEN || '';
-        if (fs.existsSync(DB_FILE)) {
-            try {
-                const existing = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-                existingToken = existing.syncpay_secret || existingToken;
-            } catch(e) {}
-        }
-        // Só atualiza o token se o frontend enviou um novo valor não-vazio
+        const existingData = await getDB();
+        
+        // SEGURANÇA: preservar o token salvo anteriormente
+        let existingToken = process.env.PUSHINPAY_TOKEN || existingData.syncpay_secret || '';
+        
         newData.syncpay_secret = (newData.syncpay_secret && newData.syncpay_secret.trim())
             ? newData.syncpay_secret.trim()
             : existingToken;
-        fs.writeFileSync(DB_FILE, JSON.stringify(newData, null, 2), 'utf8');
+
+        await saveDB(newData);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Erro ao salvar configurações' });
@@ -163,10 +205,8 @@ app.post('/pagamento', async (req, res) => {
     try {
         const { amount } = req.body;
         
-        let dbConfig = {};
-        if (fs.existsSync(DB_FILE)) {
-            try { dbConfig = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch (e) {}
-        }
+        // Busca as configurações (do Supabase ou do db.json local)
+        const dbConfig = await getDB();
 
         const TOKEN = process.env.PUSHINPAY_TOKEN || dbConfig.syncpay_secret || '';
 
