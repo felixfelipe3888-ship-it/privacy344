@@ -159,10 +159,16 @@ const storage = multer.diskStorage({
         cb(null, 'file-' + uniqueSuffix + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage: storage });
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 200 * 1024 * 1024 } // 200MB max
+});
 
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+    
+    const fileSizeMB = (req.file.size / (1024 * 1024)).toFixed(1);
+    console.log(`📤 Upload recebido: ${req.file.originalname} (${fileSizeMB}MB, ${req.file.mimetype})`);
     
     try {
         const form = new FormData();
@@ -172,28 +178,31 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
             contentType: req.file.mimetype
         });
 
+        // Timeout maior para vídeos grandes (5 minutos)
+        const timeoutMs = req.file.size > 10 * 1024 * 1024 ? 300000 : 120000;
+
         const response = await axios.post('https://catbox.moe/user/api.php', form, {
             headers: form.getHeaders(),
             maxBodyLength: Infinity,
             maxContentLength: Infinity,
-            timeout: 60000 // Aumentado para 60s
+            timeout: timeoutMs
         });
 
         const url = response.data;
         
         if (url && typeof url === 'string' && url.startsWith('http')) {
-            console.log('Upload concluído no catbox:', url);
+            console.log('✅ Upload concluído no Catbox:', url);
             // Remove arquivo temporário
             try { fs.unlinkSync(req.file.path); } catch(e) {}
             res.json({ url: url });
         } else {
-            console.error('Resposta inválida do catbox:', url);
+            console.error('⚠️ Resposta inválida do Catbox:', url);
             // Mantém o arquivo local como fallback
             res.json({ url: '/uploads/' + req.file.filename });
         }
     } catch (err) {
-        console.error('Erro no upload para o catbox:', err.message);
-        // Mantém o arquivo local como fallback no Vercel (/tmp/uploads)
+        console.error('❌ Erro no upload para o Catbox:', err.message);
+        // Mantém o arquivo local como fallback
         res.json({ url: '/uploads/' + req.file.filename });
     }
 });
@@ -257,8 +266,31 @@ app.post('/pagamento', async (req, res) => {
 
 app.get('/status', (req, res) => res.json({ status: 'Online', gateway: 'PushinPay' }));
 
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+app.listen(PORT, async () => {
+    console.log('\n' + '='.repeat(40));
+    console.log(`🚀 SERVIDOR ONLINE!`);
+    console.log(`🏠 Local: http://localhost:${PORT}`);
+    
+    // Se não estiver no Vercel, tenta gerar link público via Localtunnel
+    if (!isVercel) {
+        try {
+            const localtunnel = require('localtunnel');
+            const tunnel = await localtunnel({ port: PORT });
+            
+            console.log(`🌐 Público: ${tunnel.url}`);
+            console.log(`🔧 Admin: ${tunnel.url}/admin.html`);
+            console.log('='.repeat(40) + '\n');
+
+            tunnel.on('close', () => {
+                console.log('❌ Link público fechado');
+            });
+        } catch (err) {
+            console.log('⚠️  Não foi possível gerar o link público (Localtunnel).');
+            console.log('='.repeat(40) + '\n');
+        }
+    } else {
+        console.log('='.repeat(40) + '\n');
+    }
 });
 
 // Exporta o app para Vercel via Serverless Functions

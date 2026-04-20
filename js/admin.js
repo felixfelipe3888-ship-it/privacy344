@@ -254,17 +254,15 @@ async function uploadToServer(file) {
 async function uploadMedia(file) {
     const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|avi|webm|mkv)$/i.test(file.name);
 
-    // Tenta primeiro o servidor (especialmente para arquivos menores que 4.5MB)
-    if (file.size < 4 * 1024 * 1024) {
-        try {
-            return await uploadToServer(file);
-        } catch (e) {
-            console.warn('Server upload failed, trying external...', e.message);
-        }
+    // SEMPRE tenta o servidor primeiro (rota servidor → Catbox, que funciona para vídeos e imagens)
+    try {
+        return await uploadToServer(file);
+    } catch (e) {
+        console.warn('Server upload falhou, tentando serviços externos...', e.message);
     }
 
     if (isVideo) {
-        // Vídeos grandes: 0x0.st → Litterbox
+        // Fallback para vídeos: 0x0.st → Litterbox
         try {
             return await uploadToZeroX(file);
         } catch (e1) {
@@ -272,11 +270,11 @@ async function uploadMedia(file) {
             try {
                 return await uploadToLitterbox(file);
             } catch (e2) {
-                throw new Error('Falha no upload do vídeo.\n• 0x0.st: ' + e1.message + '\n• Litterbox: ' + e2.message);
+                throw new Error('Falha no upload do vídeo.\nTente um arquivo menor ou verifique sua conexão.\n\n• Servidor: falhou\n• 0x0.st: ' + e1.message + '\n• Litterbox: ' + e2.message);
             }
         }
     } else {
-        // Imagens: tenta servidor primeiro, depois Imgur
+        // Fallback para imagens: Imgur → FreeImage
         try {
             return await uploadToImgur(file);
         } catch (e1) {

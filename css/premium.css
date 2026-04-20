@@ -370,6 +370,8 @@ body {
     overflow: hidden;
     margin: 0 10px;
     border-radius: 12px;
+    will-change: transform; /* GPU acceleration for blur filter */
+    transform: translateZ(0); /* Force GPU layer */
 }
 
 /* Meeting Arcs Implementation */
